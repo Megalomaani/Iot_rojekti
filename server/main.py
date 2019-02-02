@@ -3,6 +3,9 @@
 
 import threading
 import TCPServer
+import time
+
+running = True
 
 print("Hello world")
 
@@ -11,7 +14,7 @@ print("Hello world")
 # HOST, PORT = "localhost", 0
 HOST, PORT = "192.168.1.36", 2500
 
-server = TCPServer.ThreadedTCPServer((HOST, PORT), TCPServer.ThreadedTCPRequestHandler)
+server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, "IT WORKS!!")
 ip, port = server.server_address
 
 # Start a thread with the server -- that thread will then start one
@@ -23,9 +26,14 @@ server_thread.start()
 print("Server loop running in thread:", server_thread.name)
 print("ip: ", ip, " port: ", port, "\n")
 
-TCPServer.client(ip, port, "Hello World 1".encode())
-TCPServer.client(ip, port, "Hello World 2".encode())
-TCPServer.client(ip, port, "Hello World 3".encode())
+# TCPServer.client(ip, port, "Hello World 1".encode())
+# TCPServer.client(ip, port, "Hello World 2".encode())
+# TCPServer.client(ip, port, "Hello World 3".encode())
+
+while running:
+    time.sleep(30)
+    print("...server running...")
+
 
 server.shutdown()
 server.server_close()
