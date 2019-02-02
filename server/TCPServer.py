@@ -27,7 +27,3 @@ def client(ip, port, message):
         print("Received: {}".format(response.decode()))
     finally:
         sock.close()
-
-
-if __name__ == "__main__":
-    pass

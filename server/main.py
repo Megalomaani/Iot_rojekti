@@ -1,13 +1,15 @@
-#Tästä se lähtee
+# Tästä se lähtee
 
-import socket
+
 import threading
 import TCPServer
 
 print("Hello world")
 
+
 # Port 0 means to select an arbitrary unused port
-HOST, PORT = "localhost", 0
+# HOST, PORT = "localhost", 0
+HOST, PORT = "192.168.1.36", 2500
 
 server = TCPServer.ThreadedTCPServer((HOST, PORT), TCPServer.ThreadedTCPRequestHandler)
 ip, port = server.server_address
