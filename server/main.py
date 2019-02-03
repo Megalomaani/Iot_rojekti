@@ -1,6 +1,6 @@
 # IoT-rojekti Main
 
-import socket
+
 from threading import Thread, Lock
 import time
 from _datetime import datetime
@@ -16,7 +16,8 @@ running = True
 HOST, PORT = "192.168.1.36", 2500
 
 def start_server_utilities():
-
+    print("Starting ServerUtilities...")
+    print("Done")
     return ServerUtilities.ServerUtilities(masterLock)
 
 
@@ -25,14 +26,15 @@ def start_tcp_server(s_util):
     print("Starting TCP server ...")
     server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, s_util)
     ip, port = server.server_address
-    # server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
     server_thread = Thread(target=server.serve_forever)
+
     # Exit the server thread when the main thread terminates
     server_thread.daemon = True
     server_thread.start()
+
     print("TCP server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
@@ -56,18 +58,18 @@ TCP_server, TCP_server_thread = start_tcp_server(server_util)
 
 # start UDP server
 
-
-# TCPServer.client(ip, port, "Hello World 1".encode())
-# TCPServer.client(ip, port, "Hello World 2".encode())
-# TCPServer.client(ip, port, "Hello World 3".encode())
+server_util.log("Server started")
 
 while running:
 
     now = datetime.now()
     print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
-    print("TCP Server running: {} \n".format(TCP_server_thread.isAlive()))
+    print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
+    server_util.list_nodes(True)
+    print()
 
-    time.sleep(10)
+
+    time.sleep(20)
 
 
 TCP_server.shutdown()

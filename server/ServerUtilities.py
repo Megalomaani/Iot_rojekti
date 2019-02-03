@@ -1,19 +1,61 @@
 # ServerUtilities - all the useful stuff
 
 from datetime import datetime
+from node import Node
 
 
 class ServerUtilities:
 
+    # Dict of TCP nodes in system
+
+
     def __init__(self, mlock):
         self.masterLock = mlock
-        print("ServerUtils started")
+        self.TCP_nodes = {}
 
     def log(self, logEntry):
         now = datetime.now()
         stamped_logEntry = "{}: {}".format(now, logEntry)
-        print("Logged: ", stamped_logEntry)
+        ##TODO dataDaemon
+        print("Logged: ", stamped_logEntry, "\n")
 
-    def get_lock(self):
+    def get_master_lock(self):
         return self.masterLock
+
+    def attach_node(self, node_id, handler, cmds):
+
+        # Node is already in system
+        if node_id in self.TCP_nodes.keys():
+
+            self.TCP_nodes[node_id].set_connected(True)
+
+        # New node, create it in system
+        else:
+            self.TCP_nodes[node_id] = Node(node_id, handler)
+            for cmd in cmds:
+                self.TCP_nodes[node_id].add_node_cmd(cmd)
+
+    # Mark node as inactive and disconnected
+    def disconnect_node(self, node_id):
+
+        self.TCP_nodes[node_id].set_connected(False)
+
+
+    def list_nodes(self,show_cmds=False):
+        print("Nodes:")
+        for nd in self.TCP_nodes.values():
+            print("ID: {} (Connected: {})".format(nd.get_id(), nd.is_connected()))
+            if show_cmds:
+                for cmd in nd.get_node_cmd_list():
+                    print("  {}".format(cmd))
+
+    def server_cmd_action(self, node_id, action_id):
+        print("Node{} sent Action {}".format(node_id, action_id))
+
+    def server_cmd_val_action(self, node_id, action_id, value):
+        print("Node{} sent Action {} with value {}".format(node_id, action_id, value))
+
+
+
+
 
