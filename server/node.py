@@ -10,7 +10,6 @@ class Node:
         self.nodeCMDs = []              # List of available to be performed on the node
         print("Node {} created".format(self.ID))
 
-
     def add_node_cmd(self, cmd):
         self.nodeCMDs.append(cmd)
 

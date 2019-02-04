@@ -7,11 +7,13 @@ from node import Node
 class ServerUtilities:
 
     # Dict of TCP nodes in system
+    serverCMDs = ["ACTION", "VAL_ACTION"]
 
 
     def __init__(self, mlock):
         self.masterLock = mlock
         self.TCP_nodes = {}
+
 
     def log(self, logEntry):
         now = datetime.now()
@@ -50,10 +52,15 @@ class ServerUtilities:
                     print("  {}".format(cmd))
 
     def server_cmd_action(self, node_id, action_id):
-        print("Node{} sent Action {}".format(node_id, action_id))
+        print("Node {} sent ACTION {}".format(node_id, action_id))
 
     def server_cmd_val_action(self, node_id, action_id, value):
-        print("Node{} sent Action {} with value {}".format(node_id, action_id, value))
+        print("Node {} sent ACTION {} with value {}".format(node_id, action_id, value))
+
+    # Battery notification BATNOT
+    def server_cmd_bat_not(self, node_id, batteryLevel):
+        print("Node {} sent Battery notification: Level:{}".format(node_id, batteryLevel))
+
 
 
 

@@ -13,7 +13,10 @@ running = True
 
 # Port 0 means to select an arbitrary unused port
 # HOST, PORT = "localhost", 0
-HOST, PORT = "192.168.1.36", 2500
+#HOST, PORT = "192.168.1.36", 2500          #MarppaNET
+HOST, PORT = "localhost", 2500        #local
+
+
 
 def start_server_utilities():
     print("Starting ServerUtilities...")

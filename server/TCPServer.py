@@ -118,7 +118,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 self.request.sendall(self.cmd_buffer.pop().encode)
 
-            # Receive from node if available
+            # Receive (serverCMD) from node if available
             try:
                 data = self.request.recv(1024).decode().strip()
 
@@ -131,8 +131,11 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             else:
                 print("{}: client: {}".format(cur_thread.name, self.client_address))
 
+                # Splitting data
+                data = data.split("/")
+
                 # detect broken socket
-                if not data:
+                if not data[0]:
                     print("Received empty string!")
                     print(">> Closing socket as broken \n")
 
@@ -145,7 +148,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     break
 
                 # Check for termination command
-                elif data == 'Q':
+                elif data[0] == 'Q':
                     print("Received terminate command!")
                     print(">> Closing socket \n")
 
@@ -158,10 +161,24 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     self.keepConnection = False
                     break
 
-                # Interpret received data
+                # Interpret received data /serverCMD
+                elif data[0] == "ACTION":
+                    self.server.server_util.server_cmd_action(ID, data[1])
+
+
+                elif data[0] == "VAL_ACTION":
+
+                    self.server.server_util.server_cmd_val_action(ID, data[1], data[2])
+
+                elif data[0] == "BATNOT":
+
+                    self.server.server_util.server_cmd_bat_not(ID, data[1])
+
+
+                # default / unrecognized
                 else:
 
-                    print("Received: {} \n".format(data))
+                    print("Received unsupported serverCMD: {} \n".format(data))
 
                     # self.get_lock()
                     # something lock-sensitive
