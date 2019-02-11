@@ -10,6 +10,10 @@
 #define STAPSK  "88888888"
 #endif
 
+#define NODE_ID "1234"
+
+// TODO: nodeCMD list
+
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
@@ -18,29 +22,22 @@ const uint16_t port = 2500;
 
 WiFiClient client;
 
-void appendChar(char* s, char c) {
-        int len = strlen(s);
-        s[len] = c;
-        s[len+1] = '\0';
-}
 
+String receive(int timeout = -1){
+  int i = 0;
 
-String receive(){
-
-  char data[32]; 
-    
-  while (client.available()) {
-    
-    char ch = static_cast<char>(client.read());
-
-    if(ch == '#'){
-      return data
+  while(!client.available()){
+    if(i != timeout){
+      delay(500);
+      i++;
+    }else{
+      return "NULL";
     }
-    appendChar(data, static_cast<char>(client.read()));
-    
   }
-
-
+  
+  String cmd = client.readStringUntil('#');
+  
+  return cmd;
   
 }
 
@@ -48,9 +45,6 @@ void setup() {
   Serial.begin(115200);
 
   // We start by connecting to a WiFi network
-
-  Serial.println();
-  Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -60,30 +54,33 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
+  
+  // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
+  // wifi connected
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-}
 
-void loop() {
+  //Connect to server
   Serial.print("connecting to ");
   Serial.print(host);
   Serial.print(':');
   Serial.println(port);
 
+
   // Use WiFiClient class to create TCP connections
-  
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     delay(5000);
     return;
   }
+  
 
   // This will send a string to the server
   Serial.println("sending data to server");
@@ -91,6 +88,38 @@ void loop() {
     client.println("Hello from node");
   }
 
+  // wait for the response from server
+  while(!client.available()){
+    delay(100);
+  }
+
+  if(!(client.readStringUntil('#') == "SEND_ID")){
+    Serial.println("Protocol error on ID request!");
+    return;
+  }
+
+  client.println(NODE_ID);
+
+  
+  if(!(client.readStringUntil('#') == "SEND_CMDS")){
+    Serial.println("Protocol error on CMD request!");
+    return;
+  }
+
+  // SEND COMMAND LIST
+
+  
+  // finish handshake
+
+
+  
+}
+
+
+
+void loop() {
+  
+  
   // wait for data to be available
   unsigned long timeout = millis();
   while (client.available() == 0) {
