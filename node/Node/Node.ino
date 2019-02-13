@@ -12,7 +12,39 @@
 
 #define NODE_ID "1234"
 
-// TODO: nodeCMD list
+//nodeCMD list
+
+const String node_CMDs[] = {"LIGHT_ON", "LIGHT_OFF"};
+
+#define NULL_CMD 0 
+#define INVALID  -1
+#define LIGHT_ON 101
+#define LIGHT_OFF 102
+
+typedef struct { char *key; int val; } t_symstruct;
+
+static t_symstruct lookuptable[] = {
+    { "LIGHT_ON", LIGHT_ON }, { "LIGHT_OFF", LIGHT_OFF } , { "NULL_CMD", NULL_CMD } 
+    };
+
+
+#define NKEYS (sizeof(lookuptable)/sizeof(t_symstruct))
+t_symstruct *sym;
+
+int decode_CMD(char *key)
+{
+    int i;
+    for (i=0; i < NKEYS; i++) {
+        sym = &lookuptable[i];
+        if (strcmp(sym->key, key) == 0)
+            return sym->val;
+    }
+    return INVALID;
+}
+
+
+
+String data = "NULL";
 
 const char* ssid     = STASSID;
 const char* password = STAPSK;
@@ -85,7 +117,7 @@ void setup() {
   // This will send a string to the server
   Serial.println("sending data to server");
   if (client.connected()) {
-    client.println("Hello from node");
+    client.println("Hello from node ");
   }
 
   // wait for the response from server
@@ -107,17 +139,46 @@ void setup() {
   }
 
   // SEND COMMAND LIST
+  for(int i = 0; i > sizeof(node_CMDs);i++){
+    client.println(node_CMDs[i]);
+    delay(50); //TODO Test if neccesary
+  }
+
+  client.println("END");
 
   
   // finish handshake
-
-
   
 }
 
 
 
 void loop() {
+
+  // Listen for incoming nodeCMDs
+  data = receive();
+
+  switch(decode_CMD(data)){
+
+    case NULL_CMD :
+      //No command received
+      break;
+    
+    case LIGHT_ON :
+      // TODO: turn on light
+      break;
+      
+    case LIGHT_OFF :
+      // TODO: turn off light
+      break;
+
+    default :
+      // UNKOWN nodeCMD
+      client.println("INVALID_CMD");
+      break;
+    
+  }
+
   
   
   // wait for data to be available
