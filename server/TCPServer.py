@@ -9,6 +9,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     lock = 0
     keepConnection = True
     cmd_buffer = []
+    toggle = True
 
     # Acquire threading lock. Prevents multiple threads using server_utils simultaneously
     def get_lock(self):
@@ -108,10 +109,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.unlock()
 
         # Set "refresh rate" of loop
-        self.request.settimeout(60)
+        self.request.settimeout(30)
 
         # Go into persistent communication loop
         while self.keepConnection:
+
+            if self.toggle:
+                self.cmd_buffer.append("LIGHT_ON")
+                self.toggle = False
+            else:
+                self.cmd_buffer.append("LIGHT_OFF")
+                self.toggle = True
 
             # Send nodeCMD if available
             if self.cmd_buffer:
