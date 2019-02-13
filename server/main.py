@@ -13,9 +13,67 @@ running = True
 
 # Port 0 means to select an arbitrary unused port
 # HOST, PORT = "localhost", 0
-#HOST, PORT = "192.168.1.36", 2500          #MarppaNET
-HOST, PORT = "localhost", 2500        #local
+# HOST, PORT = "192.168.1.36", 2500          #MarppaNET
+HOST, PORT = "localhost", 2500        #local / DEFAULT
+SERVER_ID = "00000000"      # default, overwritten by param read
 
+
+def read_server_config():
+
+    global HOST
+    global PORT
+    global SERVER_ID
+
+    params = {}
+
+    try:
+        f = open("server.conf", "r")
+        print("server.conf found")
+
+        for line in f:
+            if line[0] == "#" or line[0] == "\n":
+                continue
+            else:
+                splitted = line.split("=")
+                params[splitted[0]] = splitted[1][:-1]
+
+        print("Server parameters:")
+        print(params)
+
+
+        try:
+            if params["server_IP"] != "localhost":
+                HOST = params["server_IP"]
+
+            PORT = int(params["TCP_port"])
+
+            SERVER_ID = params["server_ID"]
+
+            # Parameters successfully set
+            print("Server parameters set")
+
+        except Exception as e1:
+            print("parameter setup FAILED:")
+            print(e1)
+            print("\n => SERVER RUNNING WITH DEFAULT PARAMETERS! \n")
+
+            # set adjusted parameters to default
+            HOST, PORT = "localhost", 2500
+            SERVER_ID = "00000000"
+
+        # close file after done
+        f.close()
+
+    except Exception as e:
+        print("server.conf read FAILED")
+        print(e)
+        print("\n => SERVER RUNNING WITH DEFAULT PARAMETERS! \n")
+
+        # set adjusted parameters to default
+        HOST, PORT = "localhost", 2500
+        SERVER_ID = "00000000"
+
+    print("Starting server, ID: ", SERVER_ID, "\n")
 
 
 def start_server_utilities():
@@ -45,6 +103,9 @@ def start_tcp_server(s_util):
 
 
 # IF MAIN
+
+# Read server configuration from file
+read_server_config()
 
 # Start dataDaemon
 pass

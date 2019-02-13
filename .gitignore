@@ -1,0 +1,4 @@
+#files to ignore
+
+#server config
+server/server.conf
