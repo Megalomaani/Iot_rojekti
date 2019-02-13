@@ -6,42 +6,18 @@
 #include <ESP8266WiFi.h>
 
 #ifndef STASSID
-#define STASSID "Lohiverkko"
-#define STAPSK  "88888888"
+#define STASSID "MarppaNET"
+#define STAPSK  "porkkana"
 #endif
 
 #define NODE_ID "1234"
 
+const short int BUILTIN_LED1 = 2; //GPIO2
+const short int BUILTIN_LED2 = 16;//GPIO16
+
 //nodeCMD list
 
 const String node_CMDs[] = {"LIGHT_ON", "LIGHT_OFF"};
-
-#define NULL_CMD 0 
-#define INVALID  -1
-#define LIGHT_ON 101
-#define LIGHT_OFF 102
-
-typedef struct { char *key; int val; } t_symstruct;
-
-static t_symstruct lookuptable[] = {
-    { "LIGHT_ON", LIGHT_ON }, { "LIGHT_OFF", LIGHT_OFF } , { "NULL_CMD", NULL_CMD } 
-    };
-
-
-#define NKEYS (sizeof(lookuptable)/sizeof(t_symstruct))
-t_symstruct *sym;
-
-int decode_CMD(char *key)
-{
-    int i;
-    for (i=0; i < NKEYS; i++) {
-        sym = &lookuptable[i];
-        if (strcmp(sym->key, key) == 0)
-            return sym->val;
-    }
-    return INVALID;
-}
-
 
 
 String data = "NULL";
@@ -49,7 +25,7 @@ String data = "NULL";
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
-const char* host = "djxmmx.net";
+const char* host = "192.168.1.38";  //marppanet
 const uint16_t port = 2500;
 
 WiFiClient client;
@@ -74,9 +50,15 @@ String receive(int timeout = -1){
 }
 
 void setup() {
+
+  // Setup LEDs
+  pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
+  pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
+  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
+  
   Serial.begin(115200);
 
-  // We start by connecting to a WiFi network
+  // Connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -158,30 +140,34 @@ void loop() {
   // Listen for incoming nodeCMDs
   data = receive();
 
-  switch(decode_CMD(data)){
+  // Test cmd
+  if(data == "LIGHT_ON"){
 
-    case NULL_CMD :
-      //No command received
-      break;
+    digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
+    client.println("OK");
     
-    case LIGHT_ON :
-      // TODO: turn on light
-      break;
-      
-    case LIGHT_OFF :
-      // TODO: turn off light
-      break;
+  }else if(data == "LIGHT_OFF"){
+    
+    digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+    client.println("OK");
+    
+  }else if(data == "NULL"){
 
-    default :
-      // UNKOWN nodeCMD
-      client.println("INVALID_CMD");
-      break;
+    client.println("NULL");
+    
+  }else{
+
+    client.println("UNKWNCMD");
     
   }
 
-  
-  
-  // wait for data to be available
+  delay(500);
+
+}
+
+/*
+
+ // wait for data to be available
   unsigned long timeout = millis();
   while (client.available() == 0) {
     if (millis() - timeout > 5000) {
@@ -200,4 +186,5 @@ void loop() {
   client.stop();
 
   delay(300000); // execute once every 5 minutes, don't flood remote service
-}
+ 
+ */
