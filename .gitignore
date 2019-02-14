@@ -2,3 +2,4 @@
 
 #server config
 server/server.conf
+server/__pycache__
