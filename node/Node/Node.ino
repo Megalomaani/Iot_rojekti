@@ -55,8 +55,15 @@ void setup() {
   pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
   pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
   
-  Serial.begin(115200);
+  delay(200);
+  Serial.begin(9600);
+  delay(200);
+  Serial.println();
+  Serial.println();
+  
+  
 
   // Connecting to a WiFi network
   Serial.print("Connecting to ");
@@ -162,20 +169,20 @@ void loop() {
   if(data == "LIGHT_ON"){
 
     digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
-    client.println("OK");
+    client.print("OK");
     
   }else if(data == "LIGHT_OFF"){
     
     digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
-    client.println("OK");
+    client.print("OK");
     
   }else if(data == "NULL"){
 
-    client.println("NULL");
+    client.print("NULL");
     
   }else{
 
-    client.println("UNKWNCMD");
+    client.print("UNKWNCMD");
     
   }
 
