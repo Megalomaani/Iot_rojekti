@@ -99,7 +99,7 @@ void setup() {
   // This will send a string to the server
   Serial.println("sending data to server");
   if (client.connected()) {
-    client.println("Hello from node ");
+    client.print("Hello from node ");
   }
 
   // wait for the response from server
@@ -107,26 +107,44 @@ void setup() {
     delay(100);
   }
 
-  if(!(client.readStringUntil('#') == "SEND_ID")){
+  data = client.readStringUntil('\n');
+  Serial.println(data);
+   
+  if(!(data == "SEND_ID")){
     Serial.println("Protocol error on ID request!");
     return;
   }
 
-  client.println(NODE_ID);
+  Serial.print("Sending ID: ");
+  Serial.println(NODE_ID);  
+  client.print(NODE_ID);
 
   
-  if(!(client.readStringUntil('#') == "SEND_CMDS")){
+  // wait for the response from server
+  while(!client.available()){
+    delay(100);
+  }
+
+  data = client.readStringUntil('\n');
+  Serial.println(data); 
+  
+  if(!(data == "SEND_CMDS")){
     Serial.println("Protocol error on CMD request!");
     return;
   }
 
   // SEND COMMAND LIST
-  for(int i = 0; i > sizeof(node_CMDs);i++){
-    client.println(node_CMDs[i]);
+  for(int i = 0; i < 2;i++){
+    Serial.println("sent cmd");
+    client.print(node_CMDs[i]);
     delay(50); //TODO Test if neccesary
   }
 
-  client.println("END");
+  Serial.println("Sending END");
+  client.print("END");
+
+
+  delay(500);
 
   
   // finish handshake

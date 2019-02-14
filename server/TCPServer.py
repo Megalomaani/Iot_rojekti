@@ -124,7 +124,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             # Send nodeCMD if available
             if self.cmd_buffer:
 
-                self.request.sendall(self.cmd_buffer.pop().encode)
+                self.request.sendall(self.cmd_buffer.pop().encode())
 
             # Receive (serverCMD) from node if available
             try:
