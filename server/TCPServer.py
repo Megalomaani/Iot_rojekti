@@ -12,6 +12,13 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     toggle = True
     ID = 0
 
+    pinging = True      # Test node connection by pinging
+    pingRate = 20       # loops in between pings
+    pingMaxTime = 3     # seconds to wait for response
+    pingMissCutout = 5  # Allowed ping misses before closing connection
+    loopsSincePing = 0
+    pingsMissed = 0
+
     # Acquire threading lock. Prevents multiple threads using server_utils simultaneously
     def get_lock(self):
 
@@ -118,7 +125,34 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # Go into persistent communication loop
         while self.keepConnection:
 
-            print("(loop) Node {}: {}: IP: {}".format(self.ID, cur_thread.name, self.client_address))
+            # Ping node if conditions are met (maybe move to end of loop to improve reactivenes)
+            if self.pinging and self.loopsSincePing == self.pingRate:
+                self.send("PING")
+                self.loopsSincePing = 0
+                #print("SENT PING")
+
+                # ping
+                if self.receive(timeout=self.pingMaxTime) == "PONG":
+                    self.pingsMissed = 0
+                    #print("GOT PONG")
+
+                else:
+                    self.pingsMissed += 1
+                    #print("NO RESPONSE!")
+
+                # Disconnect if too many missed pings
+                if self.pingsMissed > self.pingMissCutout:
+                    self.get_lock()
+                    print("Disconnecting Node: {} IP: due to missed pings!".format(self.ID, self.client_address))
+                    # TODO: Log this
+                    self.server.server_util.disconnect_node(self.ID)
+                    self.keepConnection = False
+                    self.unlock()
+            elif self.pinging:
+                self.loopsSincePing += 1
+
+
+            #print("(loop) Node {}: {}: IP: {}".format(self.ID, cur_thread.name, self.client_address))
 
             # Send nodeCMD if available
             while len(self.cmd_buffer) != 0:
@@ -128,18 +162,22 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 response = self.receive(timeout=2)
                 if response == "NULL":
-                    print("No response to {}\n".format(cmdToSend))
+                    #print("No response to {}\n".format(cmdToSend))
+                    pass
 
                 elif response == "ERROR":
-                    print("NodeCMD  {} produced an error!\n".format(cmdToSend))
+                    #print("NodeCMD  {} produced an error!\n".format(cmdToSend))
+                    pass
 
                 elif response == "OK":
-                    print("NodeCMD  {} successful\n".format(cmdToSend))
+                    #print("NodeCMD  {} successful\n".format(cmdToSend))
+                    pass
 
             # Receive (serverCMD) from node if available
             data = self.receive(timeout=2)
 
             if data == "NULL":
+                """"
                 print("... no traffic from node ... \n")
                 # Toggle node light for debug reasons
                 if self.toggle:
@@ -148,6 +186,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 else:
                     self.cmd_buffer.append("LIGHT_OFF")
                     self.toggle = True
+                """
+                pass
 
             # Process received
             else:
@@ -185,17 +225,20 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 # Interpret received data /serverCMD
                 elif data[0] == "ACTION":
+                    self.get_lock()
                     self.server.server_util.server_cmd_action(self.ID, data[1])
+                    self.unlock()
 
 
                 elif data[0] == "VAL_ACTION":
-
+                    self.get_lock()
                     self.server.server_util.server_cmd_val_action(self.ID, data[1], data[2])
+                    self.unlock()
 
                 elif data[0] == "BATNOT":
-
+                    self.get_lock()
                     self.server.server_util.server_cmd_bat_not(self.ID, data[1])
-
+                    self.unlock()
 
                 # default / unrecognized
                 else:
