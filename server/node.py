@@ -24,3 +24,11 @@ class Node:
 
     def get_node_cmd_list(self):
         return self.nodeCMDs
+
+    def execute_cmd(self, cmd):
+        self.handler.cmd_to_node(cmd)
+
+    def dummymethod(self):
+        pass
+
+

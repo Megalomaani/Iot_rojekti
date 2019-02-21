@@ -9,11 +9,9 @@ class ServerUtilities:
     # Dict of TCP nodes in system
     serverCMDs = ["ACTION", "VAL_ACTION"]
 
-
     def __init__(self, mlock):
         self.masterLock = mlock
         self.TCP_nodes = {}
-
 
     def log(self, logEntry):
         now = datetime.now()
@@ -42,7 +40,6 @@ class ServerUtilities:
 
         self.TCP_nodes[node_id].set_connected(False)
 
-
     def list_nodes(self,show_cmds=False):
         print("Nodes:")
         for nd in self.TCP_nodes.values():
@@ -50,6 +47,18 @@ class ServerUtilities:
             if show_cmds:
                 for cmd in nd.get_node_cmd_list():
                     print("  {}".format(cmd))
+
+    def get_tcp_node_list(self):
+        return self.TCP_nodes.keys()
+
+    def get_node_cmds(self, node_id):
+        if node_id in self.TCP_nodes.keys():
+            return self.TCP_nodes[node_id].get_node_cmd_list()
+        else:
+            return ["INVALID NODE_ID"]
+
+
+    # SERVER_CMDS
 
     def server_cmd_action(self, node_id, action_id):
         print("Node {} sent ACTION {}".format(node_id, action_id))
@@ -61,7 +70,17 @@ class ServerUtilities:
     def server_cmd_bat_not(self, node_id, batteryLevel):
         print("Node {} sent Battery notification: Level:{}".format(node_id, batteryLevel))
 
+    # NODE_CMDS
 
+    def send_cmd_to_node(self, node_id, node_cmd):
+        try:
+            self.TCP_nodes[node_id].execute_cmd(node_cmd)
+            return "OK"
+
+        except Exception as e:
+            print(e)
+            print("Server utilities: Error on send_cmd_to_node")
+            return "ERROR"
 
 
 

@@ -10,14 +10,15 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     keepConnection = True
     cmd_buffer = []
     toggle = True
+    ID = 0
 
     # Acquire threading lock. Prevents multiple threads using server_utils simultaneously
     def get_lock(self):
 
         cur_thread = threading.current_thread()
-        print("{} Requesting Lock \n".format(cur_thread.name))
+        print("TCP {} Requesting Lock \n".format(cur_thread.name))
         self.lock.acquire()
-        print("{} Lock acquired".format(cur_thread.name))
+        print("TCP {} Lock acquired".format(cur_thread.name))
 
     # Release lock.
     def unlock(self):
@@ -26,13 +27,18 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         print("...released\n")
 
     # Add a nodeCMD to cmd buffer
-    def cdm_to_node(self, cmd):
+    def cmd_to_node(self, cmd):
         self.cmd_buffer.append(cmd)
 
     def send(self, msg):
         self.request.sendall(msg.encode())
 
-    def receive(self, retry=False, retry_count=10):
+    def receive(self, retry=False, retry_count=10, timeout=0):
+
+        if timeout:
+            oldTimeout = self.request.timeout
+            self.request.settimeout(timeout)
+            #print("Old timeout was {} seconds".format(oldTimeout))
 
         # Receive from node if available
         try:
@@ -51,17 +57,15 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 # Nothing received
                 except:
+                    data = "NULL"
                     i += i
                     if i == retry_count:
-                        return data
+                        break
 
-                # Successful read
-                else:
-                    return data
+        if timeout:
+            self.request.settimeout(oldTimeout)
 
-        # Successful read
-        else:
-            return data
+        return data
 
     # Handler for individual connection. The good stuff
     def handle(self):
@@ -83,8 +87,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         self.send("SEND_ID\n".format(cur_thread.name))
 
-        ID = self.receive()
-        print("Received ID: ", ID)
+        self.ID = self.receive()
+        print("Received ID: ", self.ID)
 
         cmds = []
         self.send("SEND_CMDS\n")
@@ -100,44 +104,54 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         print("CMDs received:")
         print(cmds)
 
-        self.server.server_util.attach_node(ID, self, cmds)
+        self.server.server_util.attach_node(self.ID, self, cmds)
 
         # setup complete
-        self.server.server_util.log("Node attached: ID:{}".format(ID))
+        self.server.server_util.log("Node attached: ID:{}".format(self.ID))
 
         # release
         self.unlock()
 
         # Set "refresh rate" of loop
-        self.request.settimeout(30)
+        self.request.settimeout(10)
 
         # Go into persistent communication loop
         while self.keepConnection:
 
-            if self.toggle:
-                self.cmd_buffer.append("LIGHT_ON")
-                self.toggle = False
-            else:
-                self.cmd_buffer.append("LIGHT_OFF")
-                self.toggle = True
+            print("(loop) Node {}: {}: IP: {}".format(self.ID, cur_thread.name, self.client_address))
 
             # Send nodeCMD if available
-            if self.cmd_buffer:
+            while len(self.cmd_buffer) != 0:
 
-                self.request.sendall(self.cmd_buffer.pop().encode())
+                cmdToSend = self.cmd_buffer.pop()
+                self.request.sendall(cmdToSend.encode())
+
+                response = self.receive(timeout=2)
+                if response == "NULL":
+                    print("No response to {}\n".format(cmdToSend))
+
+                elif response == "ERROR":
+                    print("NodeCMD  {} produced an error!\n".format(cmdToSend))
+
+                elif response == "OK":
+                    print("NodeCMD  {} successful\n".format(cmdToSend))
 
             # Receive (serverCMD) from node if available
-            try:
-                data = self.request.recv(1024).decode().strip()
+            data = self.receive(timeout=2)
 
-            # Nothing received
-            except :
-                print("(loop) {}: client: {}".format(cur_thread.name, self.client_address))
-                print("... no traffic ... \n")
+            if data == "NULL":
+                print("... no traffic from node ... \n")
+                # Toggle node light for debug reasons
+                if self.toggle:
+                    self.cmd_buffer.append("LIGHT_ON")
+                    self.toggle = False
+                else:
+                    self.cmd_buffer.append("LIGHT_OFF")
+                    self.toggle = True
 
             # Process received
             else:
-                print("{}: client: {}".format(cur_thread.name, self.client_address))
+                print("Node {}: {}:".format(self.ID, cur_thread.name))
 
                 # Splitting data
                 data = data.split("/")
@@ -151,7 +165,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     self.server.server_util.log("{}: Connection lost, socket broken".format(self.client_address))
 
                     self.request.close()
-                    self.server.server_util.disconnect_node(ID)
+                    self.server.server_util.disconnect_node(self.ID)
                     self.unlock()
                     break
 
@@ -164,23 +178,23 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     self.server.server_util.log("Client {}: Connection lost, closed by client".format(self.client_address))
 
                     self.request.close()
-                    self.server.server_util.disconnect_node(ID)
+                    self.server.server_util.disconnect_node(self.ID)
                     self.unlock()
                     self.keepConnection = False
                     break
 
                 # Interpret received data /serverCMD
                 elif data[0] == "ACTION":
-                    self.server.server_util.server_cmd_action(ID, data[1])
+                    self.server.server_util.server_cmd_action(self.ID, data[1])
 
 
                 elif data[0] == "VAL_ACTION":
 
-                    self.server.server_util.server_cmd_val_action(ID, data[1], data[2])
+                    self.server.server_util.server_cmd_val_action(self.ID, data[1], data[2])
 
                 elif data[0] == "BATNOT":
 
-                    self.server.server_util.server_cmd_bat_not(ID, data[1])
+                    self.server.server_util.server_cmd_bat_not(self.ID, data[1])
 
 
                 # default / unrecognized

@@ -7,6 +7,8 @@ from _datetime import datetime
 
 import TCPServer
 import ServerUtilities
+import  UIServer
+
 
 
 running = True
@@ -14,7 +16,7 @@ running = True
 # Port 0 means to select an arbitrary unused port
 # HOST, PORT = "localhost", 0
 # HOST, PORT = "192.168.1.36", 2500          #MarppaNET
-HOST, PORT = "localhost", 2500        #local / DEFAULT
+HOST, PORT, UI_PORT = "localhost", 2500, 2600        #local / DEFAULT
 SERVER_ID = "00000000"      # default, overwritten by param read
 
 
@@ -84,7 +86,7 @@ def start_server_utilities():
 
 def start_tcp_server(s_util):
 
-    print("Starting TCP server ...")
+    print("Starting UI server ...")
     server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, s_util)
     ip, port = server.server_address
 
@@ -96,10 +98,29 @@ def start_tcp_server(s_util):
     server_thread.daemon = True
     server_thread.start()
 
-    print("TCP server running in thread:", server_thread.name)
+    print("UI server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
     return server, server_thread
+
+def start_ui_server(s_util):
+
+    print("Starting TCP server ...")
+    ui_server = UIServer.UIThreadedTCPServer(HOST, UI_PORT, UIServer.UIThreadedTCPRequestHandler, s_util)
+    ip, port = ui_server.server_address
+
+    # Start a thread with the server -- that thread will then start one
+    # more thread for each request
+    ui_server_thread = Thread(target=ui_server.serve_forever)
+
+    # Exit the server thread when the main thread terminates
+    ui_server_thread.daemon = True
+    ui_server_thread.start()
+
+    print("TCP server running in thread:", ui_server_thread.name)
+    print("ip: ", ip, " port: ", port, "\n")
+
+    return ui_server, ui_server_thread
 
 
 # IF MAIN
@@ -120,6 +141,9 @@ server_util = start_server_utilities()
 # Start TCP server
 TCP_server, TCP_server_thread = start_tcp_server(server_util)
 
+# Start UI server
+UI_server, UI_server_thread = start_ui_server(server_util)
+
 # start UDP server
 
 server_util.log("Server started")
@@ -129,6 +153,7 @@ while running:
     now = datetime.now()
     print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
     print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
+    print("UI Server running: {}".format(UI_server_thread.isAlive()))
     server_util.list_nodes(True)
     print()
 
@@ -139,4 +164,5 @@ while running:
 TCP_server.shutdown()
 TCP_server.server_close()
 
-
+UI_server.shutdown()
+UI_server.server_close()
