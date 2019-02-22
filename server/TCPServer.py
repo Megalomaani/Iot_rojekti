@@ -12,7 +12,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     toggle = True
     ID = 0
 
-    pinging = True      # Test node connection by pinging
+    pinging = False      # Test node connection by pinging
     pingRate = 20       # loops in between pings
     pingMaxTime = 3     # seconds to wait for response
     pingMissCutout = 5  # Allowed ping misses before closing connection
@@ -42,10 +42,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def receive(self, retry=False, retry_count=10, timeout=0):
 
+        # save current timeout if different one is used
         if timeout:
             oldTimeout = self.request.timeout
             self.request.settimeout(timeout)
-            #print("Old timeout was {} seconds".format(oldTimeout))
 
         # Receive from node if available
         try:

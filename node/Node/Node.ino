@@ -179,6 +179,10 @@ void loop() {
     digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
     client.print("OK");
     
+  }else if(data == "PING"){
+    
+    client.print("PONG");
+    
   }else if(data == "NULL"){
 
     client.print("NULL");

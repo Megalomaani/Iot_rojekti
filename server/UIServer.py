@@ -148,7 +148,14 @@ class UIThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                     self.get_lock()
                     if len(data) == 2:
-                        if data[1] == "A":
+                        if data[1] == "C":
+                            self.send("Attached active TCP nodes:\n")
+                            for n_id in self.server.server_util.get_active_tcp_node_list():
+                                self.send("{}\n".format(n_id))
+                                for n_cmd in self.server.server_util.get_node_cmds(n_id):
+                                    self.send(" -{}\n".format(n_cmd))
+
+                        elif data[1] == "A":
                             self.send("Attached TCP nodes:\n")
                             for n_id in self.server.server_util.get_tcp_node_list():
                                 self.send("{}\n".format(n_id))

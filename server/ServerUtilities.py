@@ -51,6 +51,18 @@ class ServerUtilities:
     def get_tcp_node_list(self):
         return self.TCP_nodes.keys()
 
+    def get_active_tcp_node_list(self):
+
+        activeNodes = []
+
+        for nd in self.TCP_nodes.keys():
+            if self.TCP_nodes[nd].is_connected():
+                activeNodes.append(nd)
+
+        return activeNodes
+
+
+
     def get_node_cmds(self, node_id):
         if node_id in self.TCP_nodes.keys():
             return self.TCP_nodes[node_id].get_node_cmd_list()
