@@ -162,7 +162,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     self.unlock()
             elif self.pinging:
                 self.loopsSincePing += 1
-                print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
+                #print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
 
 
             # Send nodeCMD if available

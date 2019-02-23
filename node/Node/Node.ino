@@ -126,6 +126,7 @@ void connectToServer(){
   }
 
   data = client.readStringUntil('\n');
+  data = client.readStringUntil('\n');
   Serial.println(data); 
   
   if(!(data == "SEND_CMDS")){
