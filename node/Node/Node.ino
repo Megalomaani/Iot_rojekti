@@ -6,10 +6,8 @@
 #include <ESP8266WiFi.h>
 
 #ifndef STASSID
-#define STASSID "Koti_005D"
-#define STAPSK  "A3LDJCRAJYL3F"
-//#define STASSID "HUAWEI P10 lite"
-//#define STAPSK  "77777777"
+#define STASSID "MarppaNET"
+#define STAPSK  "porkkana"
 #endif
 
 #define NODE_ID "1234"
@@ -27,8 +25,9 @@ String data = "NULL";
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
-//const char* host = "192.168.1.38";  //marppanet
-const char* host = "192.168.10.34";  //narva
+const char* host = "192.168.1.35";  //marppanet
+//const char* host = "192.168.10.34";  //narva
+//const char* host = "192.168.10.45";  //Herwood
 const uint16_t port = 2500;
 
 WiFiClient client;
@@ -52,21 +51,7 @@ String receive(int timeout = -1){
   
 }
 
-void setup() {
-
-  // Setup LEDs
-  pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
-  pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
-  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
-  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
-  
-  delay(200);
-  Serial.begin(9600);
-  delay(200);
-  Serial.println();
-  Serial.println();
-  
-  
+void connectToWifi(){
 
   // Connecting to a WiFi network
   Serial.print("Connecting to ");
@@ -91,8 +76,13 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  
+}
+
+void connectToServer(){
+
   //Connect to server
-  Serial.print("connecting to ");
+  Serial.print("connecting to server at:");
   Serial.print(host);
   Serial.print(':');
   Serial.println(port);
@@ -154,11 +144,30 @@ void setup() {
   client.print("END");
 
 
-  delay(500);
+  //delay(500);
 
   
   // finish handshake
   
+}
+
+void setup() {
+
+  // Setup LEDs
+  pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
+  pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
+  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  
+  delay(200);
+  Serial.begin(9600);
+  delay(200);
+  Serial.println();
+  Serial.println();
+  
+  connectToWifi();
+  connectToServer();
+    
 }
 
 
@@ -166,34 +175,58 @@ void setup() {
 void loop() {
 
   // Listen for incoming nodeCMDs
-  data = receive();
+  if(client.available()){
+    data = client.readStringUntil('\n');
+    Serial.println(data); 
 
-  // Test cmd
-  if(data == "LIGHT_ON"){
-
-    digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
-    client.print("OK");
-    
-  }else if(data == "LIGHT_OFF"){
-    
-    digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
-    client.print("OK");
-    
-  }else if(data == "PING"){
-    
-    client.print("PONG");
-    
-  }else if(data == "NULL"){
-
-    client.print("NULL");
-    
-  }else{
-
-    client.print("UNKWNCMD");
-    
+    // Test cmd
+    if(data == "LIGHT_ON"){
+  
+      digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
+      client.print("OK");
+      
+    }else if(data == "LIGHT_OFF"){
+      
+      digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+      client.print("OK");
+      
+    }else if(data == "PING"){
+      
+      client.print("PONG");
+      
+    }else if(data == "NULL"){
+  
+      client.print("NULL");
+      
+    }else{
+  
+      client.print("UNKWNCMD");
+      
+    }
+      
+  }else if(!client.connected()){
+    Serial.println("Connection to server lost!");
+    Serial.println("Waiting for connection...");
+    delay(5000);
+    if(!client.connected()){
+      
+      Serial.println("No connection! Reconnecting...");
+      connectToServer();
+    }
+  
+  }else if(WiFi.status() != WL_CONNECTED){
+    Serial.println("Connection to Wifi lost");
+    Serial.println("Waiting for connection...");
+    delay(5000);
+    if(!client.connected()){
+      
+      Serial.println("No connection! Rebooting...");
+      ESP.restart();
+    }
+  
   }
-
-  delay(500);
+  
+  delay(50);
 
 }
 

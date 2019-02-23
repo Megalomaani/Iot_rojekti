@@ -7,7 +7,7 @@ from _datetime import datetime
 
 import TCPServer
 import ServerUtilities
-import  UIServer
+import UIServer
 
 
 
@@ -18,6 +18,7 @@ running = True
 # HOST, PORT = "192.168.1.36", 2500          #MarppaNET
 HOST, PORT, UI_PORT = "localhost", 2500, 2600        #local / DEFAULT
 SERVER_ID = "00000000"      # default, overwritten by param read
+tcp_settings = 0
 
 
 def read_server_config():
@@ -25,8 +26,12 @@ def read_server_config():
     global HOST
     global PORT
     global SERVER_ID
+    global tcp_settings
 
     params = {}
+    # Creating TCPServer settings object
+    tcp_settings = TCPServer.TCPSettings()
+
 
     try:
         f = open("server.conf", "r")
@@ -49,7 +54,14 @@ def read_server_config():
 
             PORT = int(params["TCP_port"])
 
-            SERVER_ID = params["server_ID"]
+            # SERVER_ID = params["server_ID"]
+
+            # setting TCPServer params
+            tcp_settings.ID = params["server_ID"]
+            tcp_settings.pinging = params["TCP_EnablePinging"]
+            tcp_settings.pingMissCutout = int(params["TCP_pingMissCutout"])
+            tcp_settings.pingMaxTime = int(params["pingMaxTime"])
+            tcp_settings.pingRate = int(params["pingRate"])
 
             # Parameters successfully set
             print("Server parameters set")
@@ -86,8 +98,8 @@ def start_server_utilities():
 
 def start_tcp_server(s_util):
 
-    print("Starting UI server ...")
-    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, s_util)
+    print("Starting TCP server ...")
+    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, tcp_settings, s_util)
     ip, port = server.server_address
 
     # Start a thread with the server -- that thread will then start one
@@ -98,14 +110,14 @@ def start_tcp_server(s_util):
     server_thread.daemon = True
     server_thread.start()
 
-    print("UI server running in thread:", server_thread.name)
+    print("TCP server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
     return server, server_thread
 
 def start_ui_server(s_util):
 
-    print("Starting TCP server ...")
+    print("Starting UI server ...")
     ui_server = UIServer.UIThreadedTCPServer(HOST, UI_PORT, UIServer.UIThreadedTCPRequestHandler, s_util)
     ip, port = ui_server.server_address
 
@@ -117,7 +129,7 @@ def start_ui_server(s_util):
     ui_server_thread.daemon = True
     ui_server_thread.start()
 
-    print("TCP server running in thread:", ui_server_thread.name)
+    print("UI server running in thread:", ui_server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
     return ui_server, ui_server_thread

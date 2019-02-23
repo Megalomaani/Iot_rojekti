@@ -13,9 +13,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     ID = 0
 
     pinging = False      # Test node connection by pinging
-    pingRate = 20       # loops in between pings
-    pingMaxTime = 3     # seconds to wait for response
-    pingMissCutout = 5  # Allowed ping misses before closing connection
+    pingRate = 9999       # loops in between pings
+    pingMaxTime = 0     # seconds to wait for response
+    pingMissCutout = 9999  # Allowed ping misses before closing connection
     loopsSincePing = 0
     pingsMissed = 0
 
@@ -33,12 +33,21 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.lock.release()
         print("...released\n")
 
+    def set_params(self):
+        self.ID = self.server.ID
+
+        self.pinging = self.server.pinging
+        self.pingRate = self.server.pingRate
+        self.pingMaxTime = self.server.pingMaxTime
+        self.pingMissCutout = self.server.pingMissCutout
+
+
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
         self.cmd_buffer.append(cmd)
 
     def send(self, msg):
-        self.request.sendall(msg.encode())
+        self.request.sendall("{}\n".format(msg).encode())
 
     def receive(self, retry=False, retry_count=10, timeout=0):
 
@@ -76,6 +85,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     # Handler for individual connection. The good stuff
     def handle(self):
+
+        # read connection parameters from server
+        self.set_params()
 
         # Setup thread ref and lock
         cur_thread = threading.current_thread()
@@ -120,7 +132,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.unlock()
 
         # Set "refresh rate" of loop
-        self.request.settimeout(10)
+        self.request.settimeout(1)
 
         # Go into persistent communication loop
         while self.keepConnection:
@@ -143,16 +155,15 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # Disconnect if too many missed pings
                 if self.pingsMissed > self.pingMissCutout:
                     self.get_lock()
-                    print("Disconnecting Node: {} IP: due to missed pings!".format(self.ID, self.client_address))
+                    print("Disconnecting Node: {} IP: {} due to missed pings!".format(self.ID, self.client_address))
                     # TODO: Log this
                     self.server.server_util.disconnect_node(self.ID)
                     self.keepConnection = False
                     self.unlock()
             elif self.pinging:
                 self.loopsSincePing += 1
+                print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
 
-
-            #print("(loop) Node {}: {}: IP: {}".format(self.ID, cur_thread.name, self.client_address))
 
             # Send nodeCMD if available
             while len(self.cmd_buffer) != 0:
@@ -174,7 +185,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     pass
 
             # Receive (serverCMD) from node if available
-            data = self.receive(timeout=2)
+            data = self.receive(timeout=1)
 
             if data == "NULL":
                 """"
@@ -254,12 +265,32 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, H,P,hand, SU):
+    def __init__(self, H, P, hand, settings, SU):
         socketserver.ThreadingMixIn.__init__(self)
-        socketserver.TCPServer.__init__(self,(H,P),hand)
+        socketserver.TCPServer.__init__(self, (H, P), hand)
         self.server_util = SU
+        self.ID = settings.ID
+
+        # Pinging settings
+        self.pinging = settings.pinging
+        self.pingRate = settings.pingRate
+        self.pingMaxTime = settings.pingMaxTime
+        self.pingMissCutout = settings.pingMissCutout
 
 
+class TCPSettings:
+
+    # Server parameters
+    ID = 0
+
+    # Pinging settings
+    pinging = False  # Test node connection by pinging
+    pingRate = 20  # loops in between pings
+    pingMaxTime = 3  # seconds to wait for response
+    pingMissCutout = 5  # Allowed ping misses before closing connection
+
+    def __init__(self):
+        pass
 
 
 
