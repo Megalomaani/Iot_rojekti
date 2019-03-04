@@ -143,7 +143,8 @@ void connectToServer(){
 
   Serial.println("Sending END");
   client.print("END");
-
+  //client.receive();
+  
 
   //delay(500);
 
