@@ -22,6 +22,7 @@ class EventHandler:
             for trig in evnt.get_triggers():
                 print("trig: ID:{} Action:{}".format(trig[0],trig[1]))
                 if (trig[0] == nodeID or trig[0] == 0) and trig[1] == actionID:
+                    print("EventHand trigged!")
                     evnt.trigger(self.server_util, val)
 
     def serverTrigger(self, code):
