@@ -1,4 +1,4 @@
-
+import datetime
 
 class Node:
 
@@ -26,6 +26,7 @@ class Node:
         return self.nodeCMDs
 
     def execute_cmd(self, cmd):
+        print("{} Node passing to handler".format(datetime.datetime.now().time()))
         self.handler.cmd_to_node(cmd)
 
     def dummymethod(self):

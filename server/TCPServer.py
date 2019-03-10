@@ -1,7 +1,7 @@
 import socket
 import threading
 import socketserver
-import time
+import datetime
 
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
@@ -44,6 +44,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
+        print("{} TCP append".format(datetime.datetime.now().time()))
         self.cmd_buffer.append(cmd)
 
     def send(self, msg):
@@ -52,8 +53,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     def receive(self, retry=False, retry_count=10, timeout=0):
 
         # save current timeout if different one is used
+        oldTimeout = self.request.timeout
         if timeout:
-            oldTimeout = self.request.timeout
             self.request.settimeout(timeout)
 
         # Receive from node if available
@@ -82,6 +83,35 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             self.request.settimeout(oldTimeout)
 
         return data
+
+    def ping(self):
+
+        # Ping node if conditions are met (maybe move to end of loop to improve reactivenes)
+        if self.pinging is True and self.loopsSincePing == self.pingRate:
+            self.send("PING")
+            self.loopsSincePing = 0
+            # print("SENT PING")
+
+            # ping
+            if self.receive(timeout=self.pingMaxTime) == "PONG":
+                self.pingsMissed = 0
+                # print("GOT PONG")
+
+            else:
+                self.pingsMissed += 1
+                # print("NO RESPONSE!")
+
+            # Disconnect if too many missed pings
+            if self.pingsMissed > self.pingMissCutout:
+                self.get_lock()
+                print("Disconnecting Node: {} IP: {} due to missed pings!".format(self.ID, self.client_address))
+                # TODO: Log this
+                self.server.server_util.disconnect_node(self.ID)
+                self.keepConnection = False
+                self.unlock()
+        elif self.pinging is True:
+            self.loopsSincePing += 1
+            # print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
 
     # Handler for individual connection. The good stuff
     def handle(self):
@@ -137,39 +167,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # Go into persistent communication loop
         while self.keepConnection:
 
-            # Ping node if conditions are met (maybe move to end of loop to improve reactivenes)
-            if self.pinging and self.loopsSincePing == self.pingRate:
-                self.send("PING")
-                self.loopsSincePing = 0
-                #print("SENT PING")
+            #print("{} {} loop".format(datetime.datetime.now().time(), cur_thread.name))
 
-                # ping
-                if self.receive(timeout=self.pingMaxTime) == "PONG":
-                    self.pingsMissed = 0
-                    #print("GOT PONG")
-
-                else:
-                    self.pingsMissed += 1
-                    #print("NO RESPONSE!")
-
-                # Disconnect if too many missed pings
-                if self.pingsMissed > self.pingMissCutout:
-                    self.get_lock()
-                    print("Disconnecting Node: {} IP: {} due to missed pings!".format(self.ID, self.client_address))
-                    # TODO: Log this
-                    self.server.server_util.disconnect_node(self.ID)
-                    self.keepConnection = False
-                    self.unlock()
-            elif self.pinging:
-                self.loopsSincePing += 1
-                #print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
-
+            # Pinging (if enabled)
+            self.ping()
 
             # Send nodeCMD if available
             while len(self.cmd_buffer) != 0:
 
                 cmdToSend = self.cmd_buffer.pop()
                 self.request.sendall(cmdToSend.encode())
+                print("{} TCP SENT".format(datetime.datetime.now().time()))
 
                 response = self.receive(timeout=2)
                 if response == "NULL":
@@ -310,3 +318,4 @@ def client(ip, port, message):
 
     finally:
         sock.close()
+

@@ -1,6 +1,6 @@
 # ServerUtilities - all the useful stuff
 
-from datetime import datetime
+import datetime
 from node import Node
 
 
@@ -14,7 +14,7 @@ class ServerUtilities:
         self.TCP_nodes = {}
 
     def log(self, logEntry):
-        now = datetime.now()
+        now = datetime.datetime.now()
         stamped_logEntry = "{}: {}".format(now, logEntry)
         ##TODO dataDaemon
         print("Logged: ", stamped_logEntry, "\n")
@@ -86,6 +86,7 @@ class ServerUtilities:
 
     def send_cmd_to_node(self, node_id, node_cmd):
         try:
+            print("{} SU passing ot node".format(datetime.datetime.now().time()))
             self.TCP_nodes[node_id].execute_cmd(node_cmd)
             return "OK"
 
