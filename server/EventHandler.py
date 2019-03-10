@@ -28,7 +28,7 @@ class EventHandler:
 
 
 
-                if trig[0] == nodeID and trig[1] == actionID:
+                if trig[0] == int(nodeID) and trig[1] == int(actionID):
                     print("EventHand trigged!")
                     evnt.trigger(self.server_util, val)
 
