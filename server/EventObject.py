@@ -18,8 +18,8 @@ class EventObject:
         for cmd in self.nodeCMDsToRun:
             s_util.send_cmd_to_node(cmd[0], cmd[1])
 
-    def add_node_cmd_to_run(self, node_id, node_cmd):
-        self.nodeCMDsToRun.append((node_id, node_cmd))
+    def add_node_cmd_to_run(self, node_to_use_id, node_cmd):
+        self.nodeCMDsToRun.append((node_to_use_id, node_cmd))
 
     def add_trigger(self, node_action, node_id=0):
         self.triggers.append((node_id, node_action))
