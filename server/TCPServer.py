@@ -176,7 +176,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             while len(self.cmd_buffer) != 0:
 
                 cmdToSend = self.cmd_buffer.pop()
-                self.request.sendall(cmdToSend.encode())
+                #self.request.sendall(cmdToSend.encode())
+                self.send(cmdToSend)
                 print("{} TCP SENT".format(datetime.datetime.now().time()))
 
                 response = self.receive(timeout=2)

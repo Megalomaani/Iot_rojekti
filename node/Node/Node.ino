@@ -107,7 +107,7 @@ void connectToServer(){
     delay(100);
   }
 
-  data = client.readStringUntil('\n');
+  data = client.readStringUntil('#');
   Serial.println(data);
    
   if(!(data == "SEND_ID")){
@@ -125,8 +125,7 @@ void connectToServer(){
     delay(100);
   }
 
-  data = client.readStringUntil('\n');
-  data = client.readStringUntil('\n');
+  data = client.readStringUntil('#');
   Serial.println(data); 
   
   if(!(data == "SEND_CMDS")){
@@ -185,7 +184,7 @@ void loop() {
     digitalWrite(BUILTIN_LED1, LOW); // Turn the LED ON by making the voltage LOW
     data = client.readStringUntil('#');
     digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
-    //Serial.println(data); 
+    Serial.println(data); 
 
     // Test cmd
     if(data == "LIGHT_ON"){
@@ -237,27 +236,3 @@ void loop() {
   delay(50);
 
 }
-
-/*
-
- // wait for data to be available
-  unsigned long timeout = millis();
-  while (client.available() == 0) {
-    if (millis() - timeout > 5000) {
-      Serial.println(">>> Client Timeout !");
-      client.stop();
-      delay(60000);
-      return;
-    }
-  }
-
-  
-
-  // Close the connection
-  Serial.println();
-  Serial.println("closing connection");
-  client.stop();
-
-  delay(300000); // execute once every 5 minutes, don't flood remote service
- 
- */
