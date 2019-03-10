@@ -17,7 +17,7 @@ class EventHandler:
         self.triggers["timed"] = []
 
     def node_trigger(self, nodeID, actionID, val = 0):
-
+        print("node trigger: {}:Action {}".format(nodeID,actionID))
         for evnt in self.events.values():
             for trig in evnt.get_triggers():
                 if (trig[0] == nodeID or trig[0] == 0) and trig[1] == actionID:
