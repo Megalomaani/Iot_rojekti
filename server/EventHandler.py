@@ -17,9 +17,10 @@ class EventHandler:
         self.triggers["timed"] = []
 
     def node_trigger(self, nodeID, actionID, val = 0):
-        print("node trigger: {}:Action {}".format(nodeID,actionID))
+        print("node trigger: ID:{} Action:{}".format(nodeID,actionID))
         for evnt in self.events.values():
             for trig in evnt.get_triggers():
+                print("trig: ID:{} Action:{}".format(trig[0],trig[1]))
                 if (trig[0] == nodeID or trig[0] == 0) and trig[1] == actionID:
                     evnt.trigger(self.server_util, val)
 
@@ -30,7 +31,7 @@ class EventHandler:
         pass
 
     def add_event(self, event_id):
-        self.events[event_id] = EventObject.EventObject()
+        self.events[event_id] = EventObject.EventObject(event_id)
 
     def get_event(self, event_id):
         return self.events[event_id]

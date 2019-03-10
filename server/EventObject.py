@@ -2,7 +2,9 @@
 
 class EventObject:
 
-    def __init__(self):
+    def __init__(self, event_id):
+
+        self.ID = event_id
 
         # Triggers for the event
         self.triggers = []
@@ -12,6 +14,7 @@ class EventObject:
 
     def trigger(self, s_util, val):
         # Run specified nodeCMDs
+        print("Event{} trigged!".format(self.ID))
         for cmd in self.nodeCMDsToRun:
             s_util.send_cmd_to_node(cmd[0], cmd[1])
 
