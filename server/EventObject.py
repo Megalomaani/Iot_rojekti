@@ -13,7 +13,7 @@ class EventObject:
     def trigger(self, s_util, val):
         # Run specified nodeCMDs
         for cmd in self.nodeCMDsToRun:
-            s_util.send_cmd_to_node(cmd[1], cmd[2])
+            s_util.send_cmd_to_node(cmd[0], cmd[1])
 
     def add_node_cmd_to_run(self, node_id, node_cmd):
         self.nodeCMDsToRun.append((node_id, node_cmd))

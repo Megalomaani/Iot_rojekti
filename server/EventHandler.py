@@ -20,7 +20,7 @@ class EventHandler:
 
         for evnt in self.events.values():
             for trig in evnt.get_triggers():
-                if (trig[1] == nodeID or trig[1] == 0) and trig[2] == actionID:
+                if (trig[0] == nodeID or trig[0] == 0) and trig[1] == actionID:
                     evnt.trigger(self.server_util, val)
 
     def serverTrigger(self, code):
