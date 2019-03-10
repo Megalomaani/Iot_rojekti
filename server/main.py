@@ -8,6 +8,7 @@ from _datetime import datetime
 import TCPServer
 import ServerUtilities
 import UIServer
+import EventHandler
 
 
 
@@ -134,6 +135,17 @@ def start_ui_server(s_util):
 
     return ui_server, ui_server_thread
 
+def start_event_handler(s_util):
+
+    event_hand = EventHandler.EventHandler(s_util)
+
+    event_hand.add_event(10)
+    event_hand.get_event(10).add_trigger(1, 666)
+    event_hand.get_event(10).add_node_cmd_to_run(1234, "LIGHT_ON")
+
+
+    return event_hand
+
 
 # IF MAIN
 
@@ -157,6 +169,10 @@ TCP_server, TCP_server_thread = start_tcp_server(server_util)
 UI_server, UI_server_thread = start_ui_server(server_util)
 
 # start UDP server
+
+# start EventHandler
+
+event_handler = start_event_handler(server_util)
 
 server_util.log("Server started")
 
