@@ -262,6 +262,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # default / unrecognized
                 else:
 
+                    print("{} ACK Received".format(datetime.datetime.now().time()))
                     print("Received unsupported serverCMD: {} \n".format(data))
 
                     # self.get_lock()
