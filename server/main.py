@@ -142,7 +142,7 @@ def start_event_handler(s_util):
 
     event_hand.add_event(10)
     event_hand.get_event(10).add_trigger(1, 666)
-    event_hand.get_event(10).add_node_cmd_to_run(1234, "LIGHT_ON")
+    event_hand.get_event(10).add_node_cmd_to_run("1234", "LIGHT_ON")
 
 
     return event_hand
