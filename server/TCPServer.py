@@ -41,15 +41,16 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.pingMaxTime = self.server.pingMaxTime
         self.pingMissCutout = self.server.pingMissCutout
 
-
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
         print("{} TCP append".format(datetime.datetime.now().time()))
         self.cmd_buffer.append(cmd)
 
+    # Send message to node
     def send(self, msg):
         self.request.sendall("{}#".format(msg).encode())
 
+    # Receive from node
     def receive(self, retry=False, retry_count=10, timeout=0):
 
         # save current timeout if different one is used
