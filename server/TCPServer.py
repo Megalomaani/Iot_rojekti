@@ -248,6 +248,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 elif data[0] == "ACTION":
                     self.get_lock()
                     self.server.server_util.server_cmd_action(self.ID, data[1])
+                    self.server.event_handler.node_trigger(self.ID, data[1])
                     self.unlock()
 
 
@@ -276,11 +277,12 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, H, P, hand, settings, SU):
+    def __init__(self, H, P, hand, settings, SU, event_hand):
         socketserver.ThreadingMixIn.__init__(self)
         socketserver.TCPServer.__init__(self, (H, P), hand)
         self.server_util = SU
         self.ID = settings.ID
+        self.event_handler = event_hand
 
         # Pinging settings
         self.pinging = settings.pinging

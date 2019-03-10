@@ -97,10 +97,11 @@ def start_server_utilities():
     return ServerUtilities.ServerUtilities(masterLock)
 
 
-def start_tcp_server(s_util):
+def start_tcp_server(s_util, event_hand):
 
     print("Starting TCP server ...")
-    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, tcp_settings, s_util)
+    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, tcp_settings,
+                                         s_util, event_hand)
     ip, port = server.server_address
 
     # Start a thread with the server -- that thread will then start one
@@ -162,17 +163,19 @@ pass
 masterLock = Lock()
 server_util = start_server_utilities()
 
+# start EventHandler
+
+event_handler = start_event_handler(server_util)
+
 # Start TCP server
-TCP_server, TCP_server_thread = start_tcp_server(server_util)
+TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
 # Start UI server
 UI_server, UI_server_thread = start_ui_server(server_util)
 
 # start UDP server
 
-# start EventHandler
 
-event_handler = start_event_handler(server_util)
 
 server_util.log("Server started")
 

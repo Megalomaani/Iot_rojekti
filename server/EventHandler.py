@@ -16,8 +16,7 @@ class EventHandler:
         self.triggers["server"] = []
         self.triggers["timed"] = []
 
-
-    def nodeTrigger(self, nodeID, actionID, val = 0):
+    def node_trigger(self, nodeID, actionID, val = 0):
 
         for evnt in self.events:
             for trig in evnt.get_triggers():
