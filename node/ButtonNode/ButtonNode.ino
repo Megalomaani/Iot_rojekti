@@ -217,17 +217,19 @@ void loop() {
 
     if(digitalRead(D1)){
       
-      digitalWrite(BUILTIN_LED2, LOW);
+      digitalWrite(BUILTIN_LED1, LOW);
       client.print("ACTION/1");
       delay(200);
       
-      while(digitalRead(D1));
+      while(digitalRead(D1)){
+        delay(50);
+      }
 
       
       
     }else{
       
-      digitalWrite(BUILTIN_LED2, HIGH);
+      digitalWrite(BUILTIN_LED1, HIGH);
       
     }
      

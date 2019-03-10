@@ -86,7 +86,7 @@ class ServerUtilities:
 
     def send_cmd_to_node(self, node_id, node_cmd):
         try:
-            print("{} SU passing ot node".format(datetime.datetime.now().time()))
+            #print("{} SU passing to node".format(datetime.datetime.now().time()))
             self.TCP_nodes[node_id].execute_cmd(node_cmd)
             return "OK"
 

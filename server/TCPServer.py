@@ -43,7 +43,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
-        print("{} TCP append".format(datetime.datetime.now().time()))
+        #print("{} TCP append".format(datetime.datetime.now().time()))
         self.cmd_buffer.append(cmd)
 
     # Send message to node
@@ -179,7 +179,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 cmdToSend = self.cmd_buffer.pop()
                 #self.request.sendall(cmdToSend.encode())
                 self.send(cmdToSend)
-                print("{} TCP SENT".format(datetime.datetime.now().time()))
+                #print("{} TCP SENT".format(datetime.datetime.now().time()))
 
                 response = self.receive(timeout=2)
                 if response == "NULL":
@@ -264,7 +264,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # default / unrecognized
                 else:
 
-                    print("{} ACK Received".format(datetime.datetime.now().time()))
+                    #print("{} ACK Received".format(datetime.datetime.now().time()))
                     print("Received unsupported serverCMD: {} \n".format(data))
 
                     # self.get_lock()
