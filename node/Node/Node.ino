@@ -166,6 +166,8 @@ void setup() {
   delay(200);
   Serial.println();
   Serial.println();
+
+  client.setNoDelay(true);
   
   connectToWifi();
   connectToServer();
@@ -176,10 +178,14 @@ void setup() {
 
 void loop() {
 
+  
+  
   // Listen for incoming nodeCMDs
   if(client.available()){
-    data = client.readStringUntil('\n');
-    Serial.println(data); 
+    digitalWrite(BUILTIN_LED1, LOW); // Turn the LED ON by making the voltage LOW
+    data = client.readStringUntil('#');
+    digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
+    //Serial.println(data); 
 
     // Test cmd
     if(data == "LIGHT_ON"){
@@ -227,7 +233,7 @@ void loop() {
     }
   
   }
-  
+  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
   delay(50);
 
 }

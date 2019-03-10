@@ -48,7 +48,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.cmd_buffer.append(cmd)
 
     def send(self, msg):
-        self.request.sendall("{}\n".format(msg).encode())
+        self.request.sendall("{}#".format(msg).encode())
 
     def receive(self, retry=False, retry_count=10, timeout=0):
 
@@ -134,13 +134,13 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.server.server_util.log("New connection: {} -- Client:  {}".format(cur_thread.name, self.client_address))
         print("New client says: {} ".format(data))
 
-        self.send("SEND_ID\n".format(cur_thread.name))
+        self.send("SEND_ID")
 
         self.ID = self.receive()
         print("Received ID: ", self.ID)
 
         cmds = []
-        self.send("SEND_CMDS\n")
+        self.send("SEND_CMDS")
         cmds.append(self.receive())
 
         while True:
