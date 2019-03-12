@@ -1,7 +1,7 @@
 # IoT-rojekti Main
 
 
-from threading import Thread, Lock
+from threading import Thread, Lock, enumerate
 import time
 from _datetime import datetime
 
@@ -186,10 +186,13 @@ while running:
     print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
     print("UI Server running: {}".format(UI_server_thread.isAlive()))
     server_util.list_nodes(True)
+    print("Threads running:")
+    for thrd in enumerate():
+        print(thrd.name)
     print()
 
 
-    time.sleep(20)
+    time.sleep(10)
 
 
 TCP_server.shutdown()

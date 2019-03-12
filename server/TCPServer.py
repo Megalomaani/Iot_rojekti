@@ -33,6 +33,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.lock.release()
         print("...released\n")
 
+    def debug_get_thread_name(self):
+        return threading.current_thread().name
+
     def set_params(self):
         self.ID = self.server.ID
 
@@ -44,6 +47,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
         #print("{} TCP append".format(datetime.datetime.now().time()))
+        print("Hand in ID{} append cmd {} -- in thread {}".format(self.ID, cmd, threading.current_thread()))
         self.cmd_buffer.append(cmd)
 
     # Send message to node
@@ -168,17 +172,28 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # Go into persistent communication loop
         while self.keepConnection:
 
-            #print("{} {} loop".format(datetime.datetime.now().time(), cur_thread.name))
+            # print("{} {} loop".format(datetime.datetime.now().time(), cur_thread.name))
 
             # Pinging (if enabled)
             self.ping()
 
             # Send nodeCMD if available
-            while len(self.cmd_buffer) != 0:
+            # while len(self.cmd_buffer) != 0:
+
+            cmd = self.server.server_util.get_next_cmd(self.ID)
+
+
+            while cmd != None:
+
 
                 cmdToSend = self.cmd_buffer.pop()
-                #self.request.sendall(cmdToSend.encode())
-                self.send(cmdToSend)
+                # self.request.sendall(cmdToSend.encode())
+                # self.send(cmdToSend)
+                self.send(cmd)
+
+                # New cmd
+                cmd = self.server.server_util.get_next_cmd(self.ID)
+
                 #print("{} TCP SENT".format(datetime.datetime.now().time()))
 
                 response = self.receive(timeout=2)

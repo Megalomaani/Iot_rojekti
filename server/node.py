@@ -27,9 +27,13 @@ class Node:
 
     def execute_cmd(self, cmd):
         #print("{} Node passing to handler".format(datetime.datetime.now().time()))
+        print("NODE: ID{} CMD{} passing to handler")
         self.handler.cmd_to_node(cmd)
 
     def dummymethod(self):
         pass
+
+    def debug_get_handler(self):
+        return self.handler.debug_get_thread_name()
 
 
