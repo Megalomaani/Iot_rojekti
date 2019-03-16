@@ -1,13 +1,14 @@
 # IoT-rojekti Main
 
 
-from threading import Thread, Lock
+from threading import Thread, Lock, enumerate
 import time
 from _datetime import datetime
 
 import TCPServer
 import ServerUtilities
-import  UIServer
+import UIServer
+import EventHandler
 
 
 
@@ -18,6 +19,7 @@ running = True
 # HOST, PORT = "192.168.1.36", 2500          #MarppaNET
 HOST, PORT, UI_PORT = "localhost", 2500, 2600        #local / DEFAULT
 SERVER_ID = "00000000"      # default, overwritten by param read
+tcp_settings = 0
 
 
 def read_server_config():
@@ -25,8 +27,12 @@ def read_server_config():
     global HOST
     global PORT
     global SERVER_ID
+    global tcp_settings
 
     params = {}
+    # Creating TCPServer settings object
+    tcp_settings = TCPServer.TCPSettings()
+
 
     try:
         f = open("server.conf", "r")
@@ -49,7 +55,14 @@ def read_server_config():
 
             PORT = int(params["TCP_port"])
 
-            SERVER_ID = params["server_ID"]
+            # SERVER_ID = params["server_ID"]
+
+            # setting TCPServer params
+            tcp_settings.ID = params["server_ID"]
+            tcp_settings.pinging = params["TCP_EnablePinging"]
+            tcp_settings.pingMissCutout = int(params["TCP_pingMissCutout"])
+            tcp_settings.pingMaxTime = int(params["pingMaxTime"])
+            tcp_settings.pingRate = int(params["pingRate"])
 
             # Parameters successfully set
             print("Server parameters set")
@@ -84,10 +97,11 @@ def start_server_utilities():
     return ServerUtilities.ServerUtilities(masterLock)
 
 
-def start_tcp_server(s_util):
+def start_tcp_server(s_util, event_hand):
 
-    print("Starting UI server ...")
-    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, s_util)
+    print("Starting TCP server ...")
+    server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, tcp_settings,
+                                         s_util, event_hand)
     ip, port = server.server_address
 
     # Start a thread with the server -- that thread will then start one
@@ -98,14 +112,14 @@ def start_tcp_server(s_util):
     server_thread.daemon = True
     server_thread.start()
 
-    print("UI server running in thread:", server_thread.name)
+    print("TCP server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
     return server, server_thread
 
 def start_ui_server(s_util):
 
-    print("Starting TCP server ...")
+    print("Starting UI server ...")
     ui_server = UIServer.UIThreadedTCPServer(HOST, UI_PORT, UIServer.UIThreadedTCPRequestHandler, s_util)
     ip, port = ui_server.server_address
 
@@ -117,10 +131,21 @@ def start_ui_server(s_util):
     ui_server_thread.daemon = True
     ui_server_thread.start()
 
-    print("TCP server running in thread:", ui_server_thread.name)
+    print("UI server running in thread:", ui_server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
     return ui_server, ui_server_thread
+
+def start_event_handler(s_util):
+
+    event_hand = EventHandler.EventHandler(s_util)
+
+    event_hand.add_event(10)
+    event_hand.get_event(10).add_trigger(1, 666)
+    event_hand.get_event(10).add_node_cmd_to_run("1234", "LIGHT_ON")
+
+
+    return event_hand
 
 
 # IF MAIN
@@ -138,13 +163,19 @@ pass
 masterLock = Lock()
 server_util = start_server_utilities()
 
+# start EventHandler
+
+event_handler = start_event_handler(server_util)
+
 # Start TCP server
-TCP_server, TCP_server_thread = start_tcp_server(server_util)
+TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
 # Start UI server
 UI_server, UI_server_thread = start_ui_server(server_util)
 
 # start UDP server
+
+
 
 server_util.log("Server started")
 
@@ -155,10 +186,13 @@ while running:
     print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
     print("UI Server running: {}".format(UI_server_thread.isAlive()))
     server_util.list_nodes(True)
+    print("Threads running:")
+    for thrd in enumerate():
+        print(thrd.name)
     print()
 
 
-    time.sleep(20)
+    time.sleep(10)
 
 
 TCP_server.shutdown()

@@ -10,7 +10,7 @@
 #define STAPSK  "porkkana"
 #endif
 
-#define NODE_ID "1234"
+#define NODE_ID "666"
 
 const short int BUILTIN_LED1 = 2; //GPIO2
 const short int BUILTIN_LED2 = 16;//GPIO16
@@ -159,6 +159,8 @@ void setup() {
   pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
   digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+
+  pinMode(D1, INPUT);
   
   delay(200);
   Serial.begin(9600);
@@ -211,7 +213,29 @@ void loop() {
       
     }
       
-  }else if(!client.connected()){
+  }else{
+
+    if(digitalRead(D1)){
+      
+      digitalWrite(BUILTIN_LED1, LOW);
+      client.print("ACTION/1");
+      delay(200);
+      
+      while(digitalRead(D1)){
+        delay(50);
+      }
+
+      
+      
+    }else{
+      
+      digitalWrite(BUILTIN_LED1, HIGH);
+      
+    }
+     
+  }
+  
+  if(!client.connected()){
     Serial.println("Connection to server lost!");
     Serial.println("Waiting for connection...");
     delay(5000);

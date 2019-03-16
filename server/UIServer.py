@@ -2,6 +2,7 @@ import socket
 import threading
 import socketserver
 import time
+import datetime
 
 
 class UIThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
@@ -93,6 +94,8 @@ class UIThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             # Receive (serverCMD) from node if available
             try:
                 data = self.request.recv(1024).decode().strip()
+                #print("{} UI receive".format(datetime.datetime.now().time()))
+
 
             # Nothing received
             except :
@@ -172,8 +175,10 @@ class UIThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 # Node_CMD
                 elif data[0] == "CMD":
+                    #print("{} UI processed".format(datetime.datetime.now().time()))
                     self.send("Got Node_CMD\n")
                     self.get_lock()
+                    #print("{} UI locked + passing to util".format(datetime.datetime.now().time()))
                     ok_msg = self.server.server_util.send_cmd_to_node(data[1], data[2])
                     print("UI SERVER: Node_CMD attempt went: {}".format(ok_msg))
                     self.send(ok_msg)

@@ -1,7 +1,7 @@
 import socket
 import threading
 import socketserver
-import time
+import datetime
 
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
@@ -13,9 +13,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     ID = 0
 
     pinging = False      # Test node connection by pinging
-    pingRate = 20       # loops in between pings
-    pingMaxTime = 3     # seconds to wait for response
-    pingMissCutout = 5  # Allowed ping misses before closing connection
+    pingRate = 9999       # loops in between pings
+    pingMaxTime = 0     # seconds to wait for response
+    pingMissCutout = 9999  # Allowed ping misses before closing connection
     loopsSincePing = 0
     pingsMissed = 0
 
@@ -33,18 +33,33 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.lock.release()
         print("...released\n")
 
+    def debug_get_thread_name(self):
+        return threading.current_thread().name
+
+    def set_params(self):
+        self.ID = self.server.ID
+
+        self.pinging = self.server.pinging
+        self.pingRate = self.server.pingRate
+        self.pingMaxTime = self.server.pingMaxTime
+        self.pingMissCutout = self.server.pingMissCutout
+
     # Add a nodeCMD to cmd buffer
     def cmd_to_node(self, cmd):
+        #print("{} TCP append".format(datetime.datetime.now().time()))
+        print("Hand in ID{} append cmd {} -- in thread {}".format(self.ID, cmd, threading.current_thread()))
         self.cmd_buffer.append(cmd)
 
+    # Send message to node
     def send(self, msg):
-        self.request.sendall(msg.encode())
+        self.request.sendall("{}#".format(msg).encode())
 
+    # Receive from node
     def receive(self, retry=False, retry_count=10, timeout=0):
 
         # save current timeout if different one is used
+        oldTimeout = self.request.timeout
         if timeout:
-            oldTimeout = self.request.timeout
             self.request.settimeout(timeout)
 
         # Receive from node if available
@@ -74,8 +89,40 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         return data
 
+    def ping(self):
+
+        # Ping node if conditions are met (maybe move to end of loop to improve reactivenes)
+        if self.pinging is True and self.loopsSincePing == self.pingRate:
+            self.send("PING")
+            self.loopsSincePing = 0
+            # print("SENT PING")
+
+            # ping
+            if self.receive(timeout=self.pingMaxTime) == "PONG":
+                self.pingsMissed = 0
+                # print("GOT PONG")
+
+            else:
+                self.pingsMissed += 1
+                # print("NO RESPONSE!")
+
+            # Disconnect if too many missed pings
+            if self.pingsMissed > self.pingMissCutout:
+                self.get_lock()
+                print("Disconnecting Node: {} IP: {} due to missed pings!".format(self.ID, self.client_address))
+                # TODO: Log this
+                self.server.server_util.disconnect_node(self.ID)
+                self.keepConnection = False
+                self.unlock()
+        elif self.pinging is True:
+            self.loopsSincePing += 1
+            # print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
+
     # Handler for individual connection. The good stuff
     def handle(self):
+
+        # read connection parameters from server
+        self.set_params()
 
         # Setup thread ref and lock
         cur_thread = threading.current_thread()
@@ -92,13 +139,13 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.server.server_util.log("New connection: {} -- Client:  {}".format(cur_thread.name, self.client_address))
         print("New client says: {} ".format(data))
 
-        self.send("SEND_ID\n".format(cur_thread.name))
+        self.send("SEND_ID")
 
         self.ID = self.receive()
         print("Received ID: ", self.ID)
 
         cmds = []
-        self.send("SEND_CMDS\n")
+        self.send("SEND_CMDS")
         cmds.append(self.receive())
 
         while True:
@@ -120,45 +167,34 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.unlock()
 
         # Set "refresh rate" of loop
-        self.request.settimeout(10)
+        self.request.settimeout(1)
 
         # Go into persistent communication loop
         while self.keepConnection:
 
-            # Ping node if conditions are met (maybe move to end of loop to improve reactivenes)
-            if self.pinging and self.loopsSincePing == self.pingRate:
-                self.send("PING")
-                self.loopsSincePing = 0
-                #print("SENT PING")
+            # print("{} {} loop".format(datetime.datetime.now().time(), cur_thread.name))
 
-                # ping
-                if self.receive(timeout=self.pingMaxTime) == "PONG":
-                    self.pingsMissed = 0
-                    #print("GOT PONG")
-
-                else:
-                    self.pingsMissed += 1
-                    #print("NO RESPONSE!")
-
-                # Disconnect if too many missed pings
-                if self.pingsMissed > self.pingMissCutout:
-                    self.get_lock()
-                    print("Disconnecting Node: {} IP: due to missed pings!".format(self.ID, self.client_address))
-                    # TODO: Log this
-                    self.server.server_util.disconnect_node(self.ID)
-                    self.keepConnection = False
-                    self.unlock()
-            elif self.pinging:
-                self.loopsSincePing += 1
-
-
-            #print("(loop) Node {}: {}: IP: {}".format(self.ID, cur_thread.name, self.client_address))
+            # Pinging (if enabled)
+            self.ping()
 
             # Send nodeCMD if available
-            while len(self.cmd_buffer) != 0:
+            # while len(self.cmd_buffer) != 0:
+
+            cmd = self.server.server_util.get_next_cmd(self.ID)
+
+
+            while cmd != None:
+
 
                 cmdToSend = self.cmd_buffer.pop()
-                self.request.sendall(cmdToSend.encode())
+                # self.request.sendall(cmdToSend.encode())
+                # self.send(cmdToSend)
+                self.send(cmd)
+
+                # New cmd
+                cmd = self.server.server_util.get_next_cmd(self.ID)
+
+                #print("{} TCP SENT".format(datetime.datetime.now().time()))
 
                 response = self.receive(timeout=2)
                 if response == "NULL":
@@ -174,7 +210,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     pass
 
             # Receive (serverCMD) from node if available
-            data = self.receive(timeout=2)
+            data = self.receive(timeout=1)
 
             if data == "NULL":
                 """"
@@ -227,6 +263,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 elif data[0] == "ACTION":
                     self.get_lock()
                     self.server.server_util.server_cmd_action(self.ID, data[1])
+                    self.server.event_handler.node_trigger(self.ID, data[1])
                     self.unlock()
 
 
@@ -243,6 +280,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # default / unrecognized
                 else:
 
+                    #print("{} ACK Received".format(datetime.datetime.now().time()))
                     print("Received unsupported serverCMD: {} \n".format(data))
 
                     # self.get_lock()
@@ -254,12 +292,33 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, H,P,hand, SU):
+    def __init__(self, H, P, hand, settings, SU, event_hand):
         socketserver.ThreadingMixIn.__init__(self)
-        socketserver.TCPServer.__init__(self,(H,P),hand)
+        socketserver.TCPServer.__init__(self, (H, P), hand)
         self.server_util = SU
+        self.ID = settings.ID
+        self.event_handler = event_hand
+
+        # Pinging settings
+        self.pinging = settings.pinging
+        self.pingRate = settings.pingRate
+        self.pingMaxTime = settings.pingMaxTime
+        self.pingMissCutout = settings.pingMissCutout
 
 
+class TCPSettings:
+
+    # Server parameters
+    ID = 0
+
+    # Pinging settings
+    pinging = False  # Test node connection by pinging
+    pingRate = 20  # loops in between pings
+    pingMaxTime = 3  # seconds to wait for response
+    pingMissCutout = 5  # Allowed ping misses before closing connection
+
+    def __init__(self):
+        pass
 
 
 
@@ -279,3 +338,4 @@ def client(ip, port, message):
 
     finally:
         sock.close()
+

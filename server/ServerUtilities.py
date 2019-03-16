@@ -1,6 +1,6 @@
 # ServerUtilities - all the useful stuff
 
-from datetime import datetime
+import datetime
 from node import Node
 
 
@@ -9,12 +9,16 @@ class ServerUtilities:
     # Dict of TCP nodes in system
     serverCMDs = ["ACTION", "VAL_ACTION"]
 
+    # Buffer for outgoing nodeCMDs
+
+    cmdBuffer = {}
+
     def __init__(self, mlock):
         self.masterLock = mlock
         self.TCP_nodes = {}
 
     def log(self, logEntry):
-        now = datetime.now()
+        now = datetime.datetime.now()
         stamped_logEntry = "{}: {}".format(now, logEntry)
         ##TODO dataDaemon
         print("Logged: ", stamped_logEntry, "\n")
@@ -32,6 +36,8 @@ class ServerUtilities:
         # New node, create it in system
         else:
             self.TCP_nodes[node_id] = Node(node_id, handler)
+            self.cmdBuffer[node_id] = []
+
             for cmd in cmds:
                 self.TCP_nodes[node_id].add_node_cmd(cmd)
 
@@ -43,7 +49,7 @@ class ServerUtilities:
     def list_nodes(self,show_cmds=False):
         print("Nodes:")
         for nd in self.TCP_nodes.values():
-            print("ID: {} (Connected: {})".format(nd.get_id(), nd.is_connected()))
+            print("ID: {} {} (Connected: {})".format(nd.get_id(),nd.debug_get_handler(), nd.is_connected()))
             if show_cmds:
                 for cmd in nd.get_node_cmd_list():
                     print("  {}".format(cmd))
@@ -86,7 +92,10 @@ class ServerUtilities:
 
     def send_cmd_to_node(self, node_id, node_cmd):
         try:
+            #print("{} SU passing to node".format(datetime.datetime.now().time()))
+            print("command {} to ID {}".format(node_cmd, node_id))
             self.TCP_nodes[node_id].execute_cmd(node_cmd)
+            self.cmdBuffer[node_id].append(node_cmd)
             return "OK"
 
         except Exception as e:
@@ -94,6 +103,12 @@ class ServerUtilities:
             print("Server utilities: Error on send_cmd_to_node")
             return "ERROR"
 
+    def get_next_cmd(self, node_id):
+        if len(self.cmdBuffer[node_id]) == 0:
+            return None
+
+        else:
+            return self.cmdBuffer[node_id].pop()
 
 
 
