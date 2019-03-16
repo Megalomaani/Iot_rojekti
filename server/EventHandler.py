@@ -20,15 +20,8 @@ class EventHandler:
         print("node trigger: ID:{} Action:{}".format(nodeID, actionID))
         for evnt in self.events.values():
             for trig in evnt.get_triggers():
-                print("trig: ID:{} Action:{}".format(trig[0], trig[1]))
-                if trig[0] == nodeID:
-                    print("nodeID match")
-                if trig[1] == actionID:
-                    print("actionID match")
 
-
-
-                if trig[0] == int(nodeID) and trig[1] == int(actionID):
+                if (trig[0] == int(nodeID) or trig[0] == 0) and trig[1] == int(actionID):
                     print("EventHand trigged!")
                     evnt.trigger(self.server_util, val)
 
@@ -43,3 +36,5 @@ class EventHandler:
 
     def get_event(self, event_id):
         return self.events[event_id]
+
+    def load_events(self):

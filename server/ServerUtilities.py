@@ -92,9 +92,9 @@ class ServerUtilities:
 
     def send_cmd_to_node(self, node_id, node_cmd):
         try:
-            #print("{} SU passing to node".format(datetime.datetime.now().time()))
-            print("command {} to ID {}".format(node_cmd, node_id))
-            self.TCP_nodes[node_id].execute_cmd(node_cmd)
+            # print("{} SU passing to node".format(datetime.datetime.now().time()))
+            # print("command {} to ID {}".format(node_cmd, node_id))
+
             self.cmdBuffer[node_id].append(node_cmd)
             return "OK"
 
