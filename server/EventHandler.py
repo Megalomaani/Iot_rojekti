@@ -38,3 +38,4 @@ class EventHandler:
         return self.events[event_id]
 
     def load_events(self):
+        pass
