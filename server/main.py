@@ -8,8 +8,8 @@ from _datetime import datetime
 import TCPServer
 import ServerUtilities
 import UIServer
+import WSServer
 import EventHandler
-
 
 
 running = True
@@ -17,7 +17,7 @@ running = True
 # Port 0 means to select an arbitrary unused port
 # HOST, PORT = "localhost", 0
 # HOST, PORT = "192.168.1.36", 2500          #MarppaNET
-HOST, PORT, UI_PORT = "localhost", 2500, 2600        #local / DEFAULT
+HOST, PORT, UI_PORT, WS_PORT = "localhost", 2500, 2600, 2700        #local / DEFAULT
 SERVER_ID = "00000000"      # default, overwritten by param read
 tcp_settings = 0
 
@@ -136,6 +136,26 @@ def start_ui_server(s_util):
 
     return ui_server, ui_server_thread
 
+
+def start_ws_server(s_util):
+
+    print("Starting WS server ...")
+    ws_server = WSServer.WSThreadedTCPServer(HOST, WS_PORT, WSServer.WSThreadedTCPRequestHandler, s_util)
+    ip, port = ws_server.server_address
+
+    # Start a thread with the server -- that thread will then start one
+    # more thread for each request
+    ws_server_thread = Thread(target=ws_server.serve_forever)
+
+    # Exit the server thread when the main thread terminates
+    ws_server_thread.daemon = True
+    ws_server_thread.start()
+
+    print("WS server running in thread:", ws_server_thread.name)
+    print("ip: ", ip, " port: ", port, "\n")
+
+    return ws_server, ws_server_thread
+
 def start_event_handler(s_util):
 
     event_hand = EventHandler.EventHandler(s_util)
@@ -172,6 +192,10 @@ TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
 # Start UI server
 UI_server, UI_server_thread = start_ui_server(server_util)
+
+# Start WS server
+WS_server, WS_server_thread = start_ws_server(server_util)
+
 
 # start UDP server
 
