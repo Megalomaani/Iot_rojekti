@@ -75,12 +75,10 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).decode().strip()
 
-        print("NEW WS CONNECTION")
-        print(self.data)
+        self.server.server_util.log("WSServer: New connection: {} -- WS Client:  {}".format(threading.current_thread()
+                                                                                            .name, self.client_address))
 
         headers = self.data.split("\r\n")
-        print(headers)
-        sleep(0.5)
 
         # is it a websocket request?
         if "Connection: keep-alive, Upgrade" in self.data and "Upgrade: websocket" in self.data:
@@ -88,20 +86,27 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             for h in headers:
                 if "Sec-WebSocket-Key" in h:
                     key = h.split(" ")[1]
-            # let's shake hands shall we?
-            print("Key is:\n{}".format(key))
+
             self.shake_hand(key)
 
             while True:
-                kala = bytearray(self.request.recv(1024).strip())
-                payload = self.decode_frame(kala)
-                decoded_payload = payload.decode('utf-8')
-                print("WS RECEIVED: {}".format(decoded_payload))
-                self.send_frame("{} to you too! BR, {}".format(decoded_payload, threading.current_thread().name).encode('utf-8'))
 
-                sleep(3)
+                try:
+                    kala = bytearray(self.request.recv(1024).strip())
+                    payload = self.decode_frame(kala)
+                    decoded_payload = payload.decode('utf-8')
+                    print("WSServer ({}):  RECEIVED: {}".format(threading.current_thread().name, decoded_payload))
 
-                self.send_frame("Helevetin peurankyrpänaama!".encode('utf-8'))
+                    self.send_frame("{} to you too! BR, {}".format(decoded_payload, threading.current_thread().name)
+                                    .encode('utf-8'))
+
+                    sleep(3)
+
+                    self.send_frame("Helevetin peurankyrpänaama!".encode('utf-8'))
+
+                except:
+                    print("WSServer ({}):  CONNECTION BROKEN".format(threading.current_thread().name))
+                    return
 
                 if "bye" == decoded_payload.lower():
                     "Bidding goodbye to our client..."
@@ -123,8 +128,8 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
              "Connection: Upgrade\r\n" + \
              "Sec-WebSocket-Accept: %s\r\n\r\n"%(resp_key)).encode('utf-8')
 
-        print("Responding:\n{}".format(resp))
-        print()
+       # print("Responding:\n{}".format(resp))
+       # print()
 
         self.request.sendall(resp)
 

@@ -170,57 +170,59 @@ def start_event_handler(s_util):
 
 # IF MAIN
 
-# Read server configuration from file
-read_server_config()
+if __name__ == "__main__":
 
-# Start dataDaemon
-pass
+    # Read server configuration from file
+    read_server_config()
 
-# Start TGUI
-pass
+    # Start dataDaemon
+    pass
 
-# Start ServerUtilities
-masterLock = Lock()
-server_util = start_server_utilities()
+    # Start TGUI
+    pass
 
-# start EventHandler
+    # Start ServerUtilities
+    masterLock = Lock()
+    server_util = start_server_utilities()
 
-event_handler = start_event_handler(server_util)
+    # start EventHandler
 
-# Start TCP server
-TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
+    event_handler = start_event_handler(server_util)
 
-# Start UI server
-UI_server, UI_server_thread = start_ui_server(server_util)
+    # Start TCP server
+    TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
-# Start WS server
-WS_server, WS_server_thread = start_ws_server(server_util)
+    # Start UI server
+    UI_server, UI_server_thread = start_ui_server(server_util)
 
-
-# start UDP server
-
+    # Start WS server
+    WS_server, WS_server_thread = start_ws_server(server_util)
 
 
-server_util.log("Server started")
-
-while running:
-
-    now = datetime.now()
-    print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
-    print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
-    print("UI Server running: {}".format(UI_server_thread.isAlive()))
-    server_util.list_nodes(True)
-    print("Threads running:")
-    for thrd in enumerate():
-        print(thrd.name)
-    print()
+    # start UDP server
 
 
-    time.sleep(10)
+
+    server_util.log("Server started")
+
+    while running:
+
+        now = datetime.now()
+        print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
+        print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
+        print("UI Server running: {}".format(UI_server_thread.isAlive()))
+        server_util.list_nodes(True)
+        print("Threads running:")
+        for thrd in enumerate():
+            print(thrd.name)
+        print()
 
 
-TCP_server.shutdown()
-TCP_server.server_close()
+        time.sleep(10)
 
-UI_server.shutdown()
-UI_server.server_close()
+
+    TCP_server.shutdown()
+    TCP_server.server_close()
+
+    UI_server.shutdown()
+    UI_server.server_close()
