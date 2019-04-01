@@ -37,56 +37,239 @@ body {font-family: Arial;}
 
 /* Style the tab content */
 .tabcontent {
+
   display: none;
   padding: 6px 12px;
   border: 1px solid #ccc;
   border-top: none;
+
 }
+
+  /* Style the tab content */
+.tabheader {
+
+  background-color: lightblue;
+  padding: 6px 12px;
+  display: block;
+  border: 1px solid #ccc;
+
+  width:100%
+}
+
+/* Column layout*/
+
+* {
+  box-sizing: border-box;
+}
+
+/* Create four equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 25%;
+  height: stretch;
+  margin: 3px;
+  padding: 10px;
+  align-items: stretch;
+
+  border: 1px solid #ccc;
+  background-color: #C0C0C0;
+  border-radius: 5px;
+
+}
+
+.row {
+  display: flex;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - makes a two column-layout instead of four columns */
+@media screen and (max-width: 900px) {
+  .column  {
+    width: 50%;
+  }
+
+}
+
+/* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column  {
+    width: 100%;
+  }
+}
+
+
+
 </style>
 </head>
 <body>
 
 <div class="tab">
-  <button class="tablinks" onclick="openCity(event, 'Dash')">Dashboard</button>
+  <button id="dashButton" class="tablinks" onclick="openCity(event, 'Dash')">Dashboard</button>
   <button class="tablinks" onclick="openCity(event, 'Nodes')">Nodes</button>
   <button class="tablinks" onclick="openCity(event, 'Events')">Events</button>
   <button class="tablinks" onclick="openCity(event, 'Settings')">Settings</button>
 </div>
 
 <div id="Dash" class="tabcontent">
-  <h3>London</h3>
-  <p>London is the capital city of England.</p>
+  <h3>TODO</h3>
+  <p>- Dashboard / homepage</p>
+
+  <div class="row">
+
+    <div class="column">
+    <h2>Server status</h2>
+    <p id="ConnectionP" >WS Connected: FALSE!</p>
+    <p>Server Status: N/A</p>
+    <p>Active Threads: N</p>
+    </div>
+
+    <div class="column">
+    <h2>Nodes</h2>
+    <p>TCP nodes connected: N</p>
+    <p>UDP nodes connected: N</p>
+    <p>Total nodes: N</p>
+    </div>
+
+    <div id="NotificationBox" class="column" >
+    <h2>Notifications</h2>
+    </div>
+
+    <div class="column">
+    <h2>Column 4</h2>
+    <p>Some text..</p>
+    </div>
+
+</div>
+
 </div>
 
 <div id="Nodes" class="tabcontent">
-  <h3>Paris</h3>
-  <p>Paris is the capital of France.</p>
+
+  <div id="NodesHeader" class="tabheader">
+
+  <h3 style="width:50%;">Active nodes: </h3>
+  <h3 style="width:50%;">Known nodes:  </h3>
+
+  </div>
+
+
+  <h3>TODO</h3>
+  <p>- List of all active/known nodes with their</p>
+  <p>- List of nodeCMDs and statuses of each node</p>
 </div>
 
 <div id="Events" class="tabcontent">
-  <h3>Tokyo</h3>
-  <p>Tokyo is the capital of Japan.</p>
+  <h3>TODO</h3>
+  <p>- Interface for creating and managing events</p>
 </div>
 
 <div id="Settings" class="tabcontent">
-  <h3>Tokyo</h3>
-  <p>Tokyo is the capital of Japan.</p>
+  <h3>TODO</h3>
+  <p>- Setting Settings</p>
+  <p>- Accessing logs</p>
 </div>
 
 <script>
-function openCity(evt, cityName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(cityName).style.display = "block";
-  evt.currentTarget.className += " active";
+
+var wsUri = "ws://localhost:2700";
+var output;
+var WS
+
+function init(){
+
+
+    document.getElementById("Dash").style.display = "block";
+    document.getElementById("dashButton").className += " active";
+    output = document.getElementById("NotificationBox");
+
+    notification("Opening WS...");
+    connectToWSServer();
+
 }
+
+function openCity(evt, cityName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(cityName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function connectToWSServer(){
+
+    WS = new WebSocket(wsUri);
+    WS.onopen = function(evt) { onOpen(evt) };
+    WS.onclose = function(evt) { onClose(evt) };
+    WS.onmessage = function(evt) { onMessage(evt) };
+    WS.onerror = function(evt) { onError(evt) };
+
+}
+
+
+function onOpen(evt){
+
+    doSend("Hello from web client");
+    document.getElementById("ConnectionP").innerHTML = "WS Connected: TRUE";
+    notification("WS Connected");
+
+}
+
+function onClose(evt){
+
+    notification("WS Disconnected");
+}
+
+function onMessage(evt){
+
+    //writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
+
+    notification("Server sent: " + evt.data );
+    // websocket.close();
+}
+
+function onError(evt){
+
+    //writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    notification(">ERROR:</span> " + evt.data);
+}
+
+function doSend(message){
+
+    //writeToScreen("SENT: " + message);
+    WS.send(message);
+
+}
+
+function notification(message){
+
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+
+}
+
+function getServerStatusPacket(){
+
+}
+
+
+window.addEventListener("load", init, false);
 </script>
 
 </body>
