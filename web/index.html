@@ -178,6 +178,9 @@ body {font-family: Arial;}
 <script>
 
 var wsUri = "ws://localhost:2700";
+var WsLANUri = "ws://192.168.10.45:2700";
+var WsWANUri = "ws://84.249.11.200:2700";
+
 var output;
 var WS
 
@@ -211,6 +214,13 @@ function openCity(evt, cityName) {
 }
 
 function connectToWSServer(){
+
+    try {
+          WS = new WebSocket(wsUri);
+    }
+    catch{
+          WS = new WebSocket(wsWANUri);
+    }
 
     WS = new WebSocket(wsUri);
     WS.onopen = function(evt) { onOpen(evt) };
