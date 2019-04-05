@@ -216,9 +216,9 @@ function openCity(evt, cityName) {
 function connectToWSServer(){
 
     try {
-          WS = new WebSocket(wsUri);
+          WS = new WebSocket(wsLANUri);
     }
-    catch{
+    catch(err){
           WS = new WebSocket(wsWANUri);
     }
 
