@@ -83,7 +83,9 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         headers = self.data.split("\r\n")
 
         # is it a websocket request?
-        if "Connection: keep-alive, Upgrade" in self.data and "Upgrade: websocket" in self.data:
+        if ("Connection: keep-alive, Upgrade" in self.data or "Connection: Upgrade" in self.data) \
+                                                                                and "Upgrade: websocket" in self.data:
+
 
             print("\nIs correct WS Request!!\n")
 
