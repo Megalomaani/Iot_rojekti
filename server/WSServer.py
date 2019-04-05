@@ -78,10 +78,15 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.server.server_util.log("WSServer: New connection: {} -- WS Client:  {}".format(threading.current_thread()
                                                                                             .name, self.client_address))
 
+        print(self.data)
+
         headers = self.data.split("\r\n")
 
         # is it a websocket request?
         if "Connection: keep-alive, Upgrade" in self.data and "Upgrade: websocket" in self.data:
+
+            print("\nIs correct WS Request!!\n")
+
             # getting the websocket key out
             for h in headers:
                 if "Sec-WebSocket-Key" in h:
@@ -112,6 +117,7 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     "Bidding goodbye to our client..."
                     return
         else:
+            print("INVALID REQUEST")
             self.request.sendall(("HTTP/1.1 400 Bad Request\r\n" + \
                                   "Content-Type: text/plain\r\n" + \
                                   "Connection: close\r\n" + \
