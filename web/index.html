@@ -235,7 +235,7 @@ function onOpenLAN(evt){
 
     doSend("Hello from web client");
     document.getElementById("ConnectionP").innerHTML = "WS Connected: TRUE";
-    notification("WS Connected");
+    notification("WS (LAN) Connected");
 
 }
 
@@ -245,7 +245,7 @@ function onOpenWAN(evt){
 
     doSend("Hello from web client");
     document.getElementById("ConnectionP").innerHTML = "WS Connected: TRUE";
-    notification("WS Connected");
+    notification("WS (WAN) Connected");
 
 }
 
@@ -268,12 +268,15 @@ function onError(evt){
     // try WAN if LAN not connecting
     if (LAN == false){
 
+      notification("Switching to WAN...");
+
       WS = new WebSocket(wsWANUri);
 
       WS.onopen = function(evt) { onOpenWAN(evt) };
       WS.onclose = function(evt) { onClose(evt) };
       WS.onmessage = function(evt) { onMessage(evt) };
       WS.onerror = function(evt) { onError(evt) };
+      return;
 
     }
 
