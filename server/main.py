@@ -55,7 +55,7 @@ def read_server_config():
 
             PORT = int(params["TCP_port"])
 
-            # SERVER_ID = params["server_ID"]
+            SERVER_ID = params["server_ID"]
 
             # setting TCPServer params
             tcp_settings.ID = params["server_ID"]
@@ -164,7 +164,6 @@ def start_event_handler(s_util):
     event_hand.get_event(10).add_trigger(1, 666)
     event_hand.get_event(10).add_node_cmd_to_run("1234", "LIGHT_ON")
 
-
     return event_hand
 
 
@@ -186,7 +185,6 @@ if __name__ == "__main__":
     server_util = start_server_utilities()
 
     # start EventHandler
-
     event_handler = start_event_handler(server_util)
 
     # Start TCP server
@@ -198,9 +196,8 @@ if __name__ == "__main__":
     # Start WS server
     WS_server, WS_server_thread = start_ws_server(server_util)
 
-
     # start UDP server
-
+    pass
 
 
     server_util.log("Server started")
