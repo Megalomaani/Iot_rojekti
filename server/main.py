@@ -115,6 +115,7 @@ def start_tcp_server(s_util, event_hand):
     print("TCP server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
+
     return server, server_thread
 
 def start_ui_server(s_util):
@@ -199,6 +200,10 @@ if __name__ == "__main__":
     # start UDP server
     pass
 
+    # DEBUG Add Dummy nodes
+    if True:
+        server_util.attach_node("dummy_1", "NO_THREAD", ["LIGHT_ON", "LIGHT_OF"])
+        server_util.attach_node("dummy_2", "NO_THREAD", ["MAKE_RAIN", "DO_THING"])
 
     server_util.log("Server started")
 

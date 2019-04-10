@@ -51,6 +51,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
     # Receive from node
     def receive(self, retry=False, retry_count=10, timeout=0):
 
+
+
         # save current timeout if different one is used
         oldTimeout = self.request.timeout
         if timeout:
@@ -150,7 +152,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         print("CMDs received:")
         print(cmds)
 
-        self.server.server_util.attach_node(self.ID, self, cmds)
+        self.server.server_util.attach_node(self.ID, cur_thread, cmds)
 
         # setup complete
         self.server.server_util.log("Node attached: ID:{}".format(self.ID))
@@ -160,6 +162,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         # Set "refresh rate" of loop
         self.request.settimeout(1)
+
+        # EXPERIMENTAL!!! Aims to reduce lag
+        self.request.setblocking(0)
 
         # Go into persistent communication loop
         while self.keepConnection:
@@ -180,7 +185,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # New cmd
                 cmd = self.server.server_util.get_next_cmd(self.ID)
 
-                response = self.receive(timeout=2)
+                response =  "NULL" ##self.receive(timeout=2)
                 if response == "NULL":
                     #print("No response to {}\n".format(cmdToSend))
                     pass
