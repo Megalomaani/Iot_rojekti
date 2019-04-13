@@ -3,6 +3,8 @@
 import datetime
 from node import Node
 
+import json
+
 
 class ServerUtilities:
 
@@ -26,7 +28,7 @@ class ServerUtilities:
     def get_master_lock(self):
         return self.masterLock
 
-    def attach_node(self, node_id, handler, cmds):
+    def attach_node(self, node_id, thread_name, cmds):
 
         # Node is already in system
         if node_id in self.TCP_nodes.keys():
@@ -35,7 +37,7 @@ class ServerUtilities:
 
         # New node, create it in system
         else:
-            self.TCP_nodes[node_id] = Node(node_id, handler)
+            self.TCP_nodes[node_id] = Node(node_id, thread_name)
             self.cmdBuffer[node_id] = []
 
             for cmd in cmds:
@@ -49,7 +51,7 @@ class ServerUtilities:
     def list_nodes(self,show_cmds=False):
         print("Nodes:")
         for nd in self.TCP_nodes.values():
-            print("ID: {} {} (Connected: {})".format(nd.get_id(),nd.debug_get_handler(), nd.is_connected()))
+            print("ID: {} {} (Connected: {})".format(nd.get_id(),nd.debug_get_thread_name(), nd.is_connected()))
             if show_cmds:
                 for cmd in nd.get_node_cmd_list():
                     print("  {}".format(cmd))
@@ -67,13 +69,24 @@ class ServerUtilities:
 
         return activeNodes
 
-
-
     def get_node_cmds(self, node_id):
         if node_id in self.TCP_nodes.keys():
             return self.TCP_nodes[node_id].get_node_cmd_list()
         else:
             return ["INVALID NODE_ID"]
+
+    def get_node_json(self):
+
+        nodelist = []
+
+        for node_id in self.TCP_nodes.keys():
+            nodelist.append({"ID": node_id, "CMDS": self.TCP_nodes[node_id].get_node_cmd_list()})
+
+        node_info = {"TCP_NODES": nodelist}
+
+        return json.dumps(node_info)
+
+        # {"ID": "666", "CMDS": ["LIGHT_ON", "LIGHT_OFF"]}
 
 
     # SERVER_CMDS
@@ -92,9 +105,9 @@ class ServerUtilities:
 
     def send_cmd_to_node(self, node_id, node_cmd):
         try:
-            #print("{} SU passing to node".format(datetime.datetime.now().time()))
-            print("command {} to ID {}".format(node_cmd, node_id))
-            self.TCP_nodes[node_id].execute_cmd(node_cmd)
+            # print("{} SU passing to node".format(datetime.datetime.now().time()))
+            # print("command {} to ID {}".format(node_cmd, node_id))
+
             self.cmdBuffer[node_id].append(node_cmd)
             return "OK"
 

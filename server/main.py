@@ -8,8 +8,8 @@ from _datetime import datetime
 import TCPServer
 import ServerUtilities
 import UIServer
+import WSServer
 import EventHandler
-
 
 
 running = True
@@ -17,7 +17,7 @@ running = True
 # Port 0 means to select an arbitrary unused port
 # HOST, PORT = "localhost", 0
 # HOST, PORT = "192.168.1.36", 2500          #MarppaNET
-HOST, PORT, UI_PORT = "localhost", 2500, 2600        #local / DEFAULT
+HOST, PORT, UI_PORT, WS_PORT = "localhost", 2500, 2600, 2700        #local / DEFAULT
 SERVER_ID = "00000000"      # default, overwritten by param read
 tcp_settings = 0
 
@@ -55,7 +55,7 @@ def read_server_config():
 
             PORT = int(params["TCP_port"])
 
-            # SERVER_ID = params["server_ID"]
+            SERVER_ID = params["server_ID"]
 
             # setting TCPServer params
             tcp_settings.ID = params["server_ID"]
@@ -115,6 +115,7 @@ def start_tcp_server(s_util, event_hand):
     print("TCP server running in thread:", server_thread.name)
     print("ip: ", ip, " port: ", port, "\n")
 
+
     return server, server_thread
 
 def start_ui_server(s_util):
@@ -136,6 +137,26 @@ def start_ui_server(s_util):
 
     return ui_server, ui_server_thread
 
+
+def start_ws_server(s_util):
+
+    print("Starting WS server ...")
+    ws_server = WSServer.WSThreadedTCPServer(HOST, WS_PORT, WSServer.WSThreadedTCPRequestHandler, s_util)
+    ip, port = ws_server.server_address
+
+    # Start a thread with the server -- that thread will then start one
+    # more thread for each request
+    ws_server_thread = Thread(target=ws_server.serve_forever)
+
+    # Exit the server thread when the main thread terminates
+    ws_server_thread.daemon = True
+    ws_server_thread.start()
+
+    print("WS server running in thread:", ws_server_thread.name)
+    print("ip: ", ip, " port: ", port, "\n")
+
+    return ws_server, ws_server_thread
+
 def start_event_handler(s_util):
 
     event_hand = EventHandler.EventHandler(s_util)
@@ -144,59 +165,66 @@ def start_event_handler(s_util):
     event_hand.get_event(10).add_trigger(1, 666)
     event_hand.get_event(10).add_node_cmd_to_run("1234", "LIGHT_ON")
 
-
     return event_hand
 
 
 # IF MAIN
 
-# Read server configuration from file
-read_server_config()
+if __name__ == "__main__":
 
-# Start dataDaemon
-pass
+    # Read server configuration from file
+    read_server_config()
 
-# Start TGUI
-pass
+    # Start dataDaemon
+    pass
 
-# Start ServerUtilities
-masterLock = Lock()
-server_util = start_server_utilities()
+    # Start TGUI
+    pass
 
-# start EventHandler
+    # Start ServerUtilities
+    masterLock = Lock()
+    server_util = start_server_utilities()
 
-event_handler = start_event_handler(server_util)
+    # start EventHandler
+    event_handler = start_event_handler(server_util)
 
-# Start TCP server
-TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
+    # Start TCP server
+    TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
-# Start UI server
-UI_server, UI_server_thread = start_ui_server(server_util)
+    # Start UI server
+    UI_server, UI_server_thread = start_ui_server(server_util)
 
-# start UDP server
+    # Start WS server
+    WS_server, WS_server_thread = start_ws_server(server_util)
+
+    # start UDP server
+    pass
+
+    # DEBUG Add Dummy nodes
+    if True:
+        server_util.attach_node("dummy_1", "NO_THREAD", ["LIGHT_ON", "LIGHT_OF"])
+        server_util.attach_node("dummy_2", "NO_THREAD", ["MAKE_RAIN", "DO_THING"])
+
+    server_util.log("Server started")
+
+    while running:
+
+        now = datetime.now()
+        print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
+        print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
+        print("UI Server running: {}".format(UI_server_thread.isAlive()))
+        server_util.list_nodes(True)
+        print("Threads running:")
+        for thrd in enumerate():
+            print(thrd.name)
+        print()
 
 
-
-server_util.log("Server started")
-
-while running:
-
-    now = datetime.now()
-    print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
-    print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
-    print("UI Server running: {}".format(UI_server_thread.isAlive()))
-    server_util.list_nodes(True)
-    print("Threads running:")
-    for thrd in enumerate():
-        print(thrd.name)
-    print()
+        time.sleep(10)
 
 
-    time.sleep(10)
+    TCP_server.shutdown()
+    TCP_server.server_close()
 
-
-TCP_server.shutdown()
-TCP_server.server_close()
-
-UI_server.shutdown()
-UI_server.server_close()
+    UI_server.shutdown()
+    UI_server.server_close()

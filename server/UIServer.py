@@ -76,7 +76,7 @@ class UIThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         # Process and log new connection
         self.get_lock()
-        self.server.server_util.log("New connection: {} -- UI Client:  {}".format(cur_thread.name, self.client_address))
+        self.server.server_util.log("UIServer: New connection: {} -- UI Client:  {}".format(cur_thread.name, self.client_address))
         print("New client says: {} ".format(data))
 
         self.send("Connected to server\n")

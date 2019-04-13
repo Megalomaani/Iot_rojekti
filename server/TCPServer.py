@@ -8,7 +8,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     lock = 0
     keepConnection = True
-    cmd_buffer = []
+    cmd_buffer = []     # NOT IN USE!
     toggle = True
     ID = 0
 
@@ -44,18 +44,14 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.pingMaxTime = self.server.pingMaxTime
         self.pingMissCutout = self.server.pingMissCutout
 
-    # Add a nodeCMD to cmd buffer
-    def cmd_to_node(self, cmd):
-        #print("{} TCP append".format(datetime.datetime.now().time()))
-        print("Hand in ID{} append cmd {} -- in thread {}".format(self.ID, cmd, threading.current_thread()))
-        self.cmd_buffer.append(cmd)
-
     # Send message to node
     def send(self, msg):
         self.request.sendall("{}#".format(msg).encode())
 
     # Receive from node
     def receive(self, retry=False, retry_count=10, timeout=0):
+
+
 
         # save current timeout if different one is used
         oldTimeout = self.request.timeout
@@ -131,8 +127,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # Read initial message
         data = self.request.recv(1024).decode()
 
-        # set timeout for read (TIMEOUT THROWS ERROR!)
-        # self.request.settimeout(60)
 
         # Process and log new connection
         self.get_lock()
@@ -158,7 +152,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         print("CMDs received:")
         print(cmds)
 
-        self.server.server_util.attach_node(self.ID, self, cmds)
+        self.server.server_util.attach_node(self.ID, cur_thread, cmds)
 
         # setup complete
         self.server.server_util.log("Node attached: ID:{}".format(self.ID))
@@ -169,6 +163,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # Set "refresh rate" of loop
         self.request.settimeout(1)
 
+        # EXPERIMENTAL!!! Aims to reduce lag
+        self.request.setblocking(0)
+
         # Go into persistent communication loop
         while self.keepConnection:
 
@@ -178,25 +175,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             self.ping()
 
             # Send nodeCMD if available
-            # while len(self.cmd_buffer) != 0:
-
+            # Check for nodeCMDs in buffer
             cmd = self.server.server_util.get_next_cmd(self.ID)
 
+            while cmd is not None:
 
-            while cmd != None:
-
-
-                cmdToSend = self.cmd_buffer.pop()
-                # self.request.sendall(cmdToSend.encode())
-                # self.send(cmdToSend)
                 self.send(cmd)
 
                 # New cmd
                 cmd = self.server.server_util.get_next_cmd(self.ID)
 
-                #print("{} TCP SENT".format(datetime.datetime.now().time()))
-
-                response = self.receive(timeout=2)
+                response =  "NULL" ##self.receive(timeout=2)
                 if response == "NULL":
                     #print("No response to {}\n".format(cmdToSend))
                     pass
@@ -212,6 +201,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             # Receive (serverCMD) from node if available
             data = self.receive(timeout=1)
 
+            # Nothing received
             if data == "NULL":
                 """"
                 print("... no traffic from node ... \n")
@@ -266,7 +256,6 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     self.server.event_handler.node_trigger(self.ID, data[1])
                     self.unlock()
 
-
                 elif data[0] == "VAL_ACTION":
                     self.get_lock()
                     self.server.server_util.server_cmd_val_action(self.ID, data[1], data[2])
@@ -280,7 +269,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # default / unrecognized
                 else:
 
-                    #print("{} ACK Received".format(datetime.datetime.now().time()))
+                    # print("{} ACK Received".format(datetime.datetime.now().time()))
                     print("Received unsupported serverCMD: {} \n".format(data))
 
                     # self.get_lock()
@@ -319,23 +308,3 @@ class TCPSettings:
 
     def __init__(self):
         pass
-
-
-
-
-
-
-
-
-
-def client(ip, port, message):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((ip, port))
-    try:
-        sock.sendall(message)
-        response = sock.recv(1024)
-        print("Received: {}".format(response.decode()))
-
-    finally:
-        sock.close()
-

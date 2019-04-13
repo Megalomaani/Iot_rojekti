@@ -6,8 +6,8 @@
 #include <ESP8266WiFi.h>
 
 #ifndef STASSID
-#define STASSID "MarppaNET"
-#define STAPSK  "porkkana"
+#define STASSID "Lohiverkko"
+#define STAPSK  "88888888"
 #endif
 
 #define NODE_ID "1234"
@@ -25,9 +25,9 @@ String data = "NULL";
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
-const char* host = "192.168.1.35";  //marppanet
+//const char* host = "192.168.1.35";  //marppanet
 //const char* host = "192.168.10.34";  //narva
-//const char* host = "192.168.10.45";  //Herwood
+const char* host = "192.168.10.45";  //Herwood
 const uint16_t port = 2500;
 
 WiFiClient client;

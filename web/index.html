@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family: Arial;}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #C0C0C0;
+  border-radius: 5px;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #808080;
+}
+
+/* Style the tab content */
+.tabcontent {
+
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+
+}
+
+  /* Style the tab content */
+.tabheader {
+
+  background-color: lightblue;
+  padding: 6px 12px;
+  display: block;
+  border: 1px solid #ccc;
+
+  width:100%
+}
+
+/* Column layout*/
+
+* {
+  box-sizing: border-box;
+}
+
+/* Create four equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 25%;
+  height: stretch;
+  margin: 3px;
+  padding: 10px;
+  align-items: stretch;
+
+  border: 1px solid #ccc;
+  background-color: #C0C0C0;
+  border-radius: 5px;
+
+}
+
+/* NODE BLOCK */
+.node_block {
+  float: left;
+  width: stretch;
+  height: stretch;
+  margin: 3px;
+  padding: 10px;
+  align-items: stretch;
+
+  border: 1px solid #ccc;
+  background-color: #C0C0C0;
+  border-radius: 5px;
+
+}
+
+.row {
+  display: flex;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - makes a two column-layout instead of four columns */
+@media screen and (max-width: 900px) {
+  .column  {
+    width: 50%;
+  }
+
+}
+
+/* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column  {
+    width: 100%;
+  }
+}
+
+
+
+</style>
+</head>
+<body>
+
+<div class="tab">
+  <button id="dashButton" class="tablinks" onclick="openCity(event, 'Dash')">Dashboard</button>
+  <button id="nodeButton" class="tablinks" onclick="openCity(event, 'Nodes')">Nodes</button>
+  <button class="tablinks" onclick="openCity(event, 'Events')">Events</button>
+  <button class="tablinks" onclick="openCity(event, 'Settings')">Settings</button>
+</div>
+
+<div id="Dash" class="tabcontent">
+  <h3>TODO</h3>
+  <p>- Dashboard / homepage</p>
+
+  <div class="row">
+
+    <div class="column">
+    <h2>Server status</h2>
+    <p id="ConnectionP" >WS Connected: FALSE!</p>
+    <p>Server Status: N/A</p>
+    <p>Active Threads: N</p>
+    </div>
+
+    <div class="column">
+    <h2>Nodes</h2>
+    <p>TCP nodes connected: N</p>
+    <p>UDP nodes connected: N</p>
+    <p>Total nodes: N</p>
+    </div>
+
+    <div id="NotificationBox" class="column" >
+    <h2>Notifications</h2>
+    </div>
+
+    <div class="column">
+    <h2>Send to server..</h2>
+    <input type="text" id="serverInput" value="">
+    <button onclick="sendInputToServer()">Send</button>
+    </div>
+
+</div>
+
+</div>
+
+<div id="Nodes" class="tabcontent">
+
+  <div id="NodesHeader" class="tabheader">
+
+  <h3 style="width:50%;">Active nodes: N </h3>
+  <h3 style="width:50%;">Known nodes:  N</h3>
+  <button onclick="requestNodeInfo()">Refresh nodes</button>
+
+  </div>
+
+  <div id="nodeRow" class="row">
+
+    <div class="node_block">
+    <h3 id="NH_xxxx" >ID: xxxxx</h3>
+    <p id="NS_xxxx" >Status: Connected</p>
+    <p>Type RnD</p>
+    <h3>NodeCMDs</h3>
+    <button onclick="sendInputToServer()">CMD x</button>
+    <button onclick="sendInputToServer()">CMD Y</button>
+    </div>
+
+
+
+  </div>
+
+
+  <h3>TODO</h3>
+  <p>- List of all active/known nodes with their</p>
+  <p>- List of nodeCMDs and statuses of each node</p>
+</div>
+
+<div id="Events" class="tabcontent">
+  <h3>TODO</h3>
+  <p>- Interface for creating and managing events</p>
+</div>
+
+<div id="Settings" class="tabcontent">
+  <h3>TODO</h3>
+  <p>- Setting Settings</p>
+  <p>- Accessing logs</p>
+</div>
+
+<script>
+
+var useLocalhost = true;
+
+var wsLOCUri = "ws://localhost:2700";
+var wsLANUri = "ws://192.168.10.45:2700";
+var wsWANUri = "ws://84.249.11.200:2700";
+
+var LAN = false
+var WAN = false
+
+var output;
+var WS
+
+function init(){
+
+
+    document.getElementById("Nodes").style.display = "block";
+    document.getElementById("nodeButton").className += " active";
+    output = document.getElementById("NotificationBox");
+
+    notification("Opening WS...");
+    connectToWSServer();
+
+}
+
+function openCity(evt, cityName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(cityName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function connectToWSServer(){
+
+    if(useLocalhost){
+
+      WS = new WebSocket(wsLOCUri);
+
+    }else{
+
+      WS = new WebSocket(wsLANUri);
+
+    }
+
+    WS.onopen = function(evt) { onOpenLAN(evt) };
+    WS.onclose = function(evt) { onClose(evt) };
+    WS.onmessage = function(evt) { onMessage(evt) };
+    WS.onerror = function(evt) { onError(evt) };
+
+}
+
+
+function onOpenLAN(evt){
+
+    LAN = true;
+
+    doSend("Hello from web client");
+    document.getElementById("ConnectionP").innerHTML = "WS Connected: TRUE";
+    notification("WS (LAN) Connected");
+
+}
+
+function onOpenWAN(evt){
+
+    WAN = true;
+
+    doSend("Hello from web client");
+    document.getElementById("ConnectionP").innerHTML = "WS Connected: TRUE";
+    notification("WS (WAN) Connected");
+
+}
+
+
+function onClose(evt){
+
+    notification("WS Disconnected");
+}
+
+function onMessage(evt){
+
+    notification("Server sent: " + evt.data );
+
+    var obj = { name: "John", age: 30, city: "New York" };
+    var myJSON = JSON.stringify(obj);
+    //doSend(myJSON);
+
+    // Try to interpret the message
+
+    try {
+      var received = evt.data.split("/");
+
+      if(received[0] == "NODE_INFO"){
+
+          var nodes = JSON.parse(received[1])
+          var x = ""
+          notification("parse OK");
+
+          // Output node data received
+
+          for (i in nodes.TCP_NODES) {
+            x += "<b>" + nodes.TCP_NODES[i].ID + "</b><br>";
+            for (j in nodes.TCP_NODES[i].CMDS) {
+              x += nodes.TCP_NODES[i].CMDS[j] + "<br>";
+            }
+          }
+
+          var pre = document.createElement("div");
+          pre.style.wordWrap = "break-word";
+          pre.innerHTML = x;
+          output.appendChild(pre);
+
+          // Make node div for every node
+
+          var nodeHTML = "";
+
+          for (i in nodes.TCP_NODES) {
+            nodeHTML += "<div class=\"node_block\">";
+
+            nodeHTML += "<h3>ID: " + nodes.TCP_NODES[i].ID + "</h3>";
+            nodeHTML += "<p id=\"NodeStatus_" + nodes.TCP_NODES[i].ID + "\" >Status: Connected</p>";
+            nodeHTML += "<p>Type RnD</p>";
+            nodeHTML += "<h3>NodeCMDs</h3>";
+
+            for (j in nodes.TCP_NODES[i].CMDS) {
+
+              nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
+                              + nodes.TCP_NODES[i].ID
+                              + "/"
+                              + nodes.TCP_NODES[i].CMDS[j]
+                              + "&quot;)\">"
+                              + nodes.TCP_NODES[i].CMDS[j]
+                              + "</button>";
+
+            }
+            nodeHTML += "</div>";
+          }
+
+          var node_element = document.createElement("div");
+          node_element.style.wordWrap = "break-word";
+          node_element.innerHTML = nodeHTML;
+
+          document.getElementById("nodeRow").innerHTML = ""
+          document.getElementById("nodeRow").appendChild(node_element);
+          //document.getElementById("nodeRow").innerHTML = node_element;
+
+
+
+
+
+      }else{
+        notification("Unknown header: " + received[0]);
+      }
+
+
+    }
+    catch(err) {
+      notification("Interpretation failed");
+      notification(err);
+
+    }
+
+
+}
+
+function onError(evt){
+
+    // try WAN if LAN not connecting
+    if (LAN == false && !useLocalhost){
+
+      notification("Switching to WAN...");
+
+      WS = new WebSocket(wsWANUri);
+
+      WS.onopen = function(evt) { onOpenWAN(evt) };
+      WS.onclose = function(evt) { onClose(evt) };
+      WS.onmessage = function(evt) { onMessage(evt) };
+      WS.onerror = function(evt) { onError(evt) };
+      return;
+
+    }
+
+    //writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    notification(">ERROR:</span> " + evt.data);
+}
+
+function doSend(message){
+
+    //writeToScreen("SENT: " + message);
+    WS.send(message);
+
+}
+
+
+function sendInputToServer(){
+
+    var message = document.getElementById("serverInput").value;
+    WS.send(message);
+
+}
+
+function requestNodeInfo(){
+
+    WS.send("GET/NODE_INFO");
+
+}
+
+function sendNodeCMDToServer(CMDString){
+
+    WS.send("CMD/" + CMDString);
+
+}
+
+
+
+function notification(message){
+
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+
+}
+
+function getServerStatusPacket(){
+
+}
+
+
+window.addEventListener("load", init, false);
+</script>
+
+</body>
+</html>

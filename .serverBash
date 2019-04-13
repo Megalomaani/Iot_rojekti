@@ -1,0 +1,32 @@
+#!/bin/bash
+# start / stop / status  / restart IoT server
+function IoT_Server(){
+	case "$1" in
+		start)
+			#
+			sudo systemctl start IoT_server.service
+			echo "IoT_Server: started"
+			;;
+		
+		stop)
+			#
+			sudo systemctl stop IoT_server.service
+			echo "IoT_Server: stopped"
+			;;
+	
+		status)
+			#
+			sudo systemctl status IoT_server.service
+			;;
+	
+		restart)
+			#
+			sudo systemctl restart IoT_server.service
+			echo "IoT_Server: restarted"
+			;;
+		*)	
+			#
+			echo "Usage: $0 {start|stop|status|restart}"
+			;;
+		esac
+}
