@@ -15,6 +15,7 @@
 const short int BUILTIN_LED1 = 2; //GPIO2
 const short int BUILTIN_LED2 = 16;//GPIO16
 
+
 //nodeCMD list
 
 const String node_CMDs[] = {"LIGHT_ON", "LIGHT_OFF"};
@@ -157,6 +158,7 @@ void setup() {
   // Setup LEDs
   pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
   pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
+  pinMode(D1, OUTPUT); // 
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
   digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
   
@@ -190,11 +192,18 @@ void loop() {
     if(data == "LIGHT_ON"){
   
       digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
+
+      
+      digitalWrite(D1, HIGH); // Turn on Relay
+      
       client.print("OK");
       
     }else if(data == "LIGHT_OFF"){
       
       digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+
+      digitalWrite(D1, LOW); // Turn off Relay
+      
       client.print("OK");
       
     }else if(data == "PING"){
