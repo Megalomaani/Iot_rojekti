@@ -10,6 +10,7 @@ import ServerUtilities
 import UIServer
 import WSServer
 import EventHandler
+import Alarm
 
 
 running = True
@@ -165,7 +166,19 @@ def start_event_handler(s_util):
     event_hand.get_event(10).add_trigger(1, 666)
     event_hand.get_event(10).add_node_cmd_to_run("1234", "LIGHT_ON")
 
+    event_hand.add_event(11)
+    event_hand.get_event(11).add_trigger(1, 69)
+    event_hand.get_event(11).add_node_cmd_to_run("1234", "ALARM MOTHERFUCKER")
+
     return event_hand
+
+def start_alarm(event_hand):
+
+    alarm = Alarm.Alarm(event_hand.node_trigger, 69, 1)
+    alarm.setAlarm("a", [0,1], 21, 50, "yes")
+
+    return alarm
+
 
 
 # IF MAIN
@@ -187,6 +200,8 @@ if __name__ == "__main__":
 
     # start EventHandler
     event_handler = start_event_handler(server_util)
+
+    alarm = start_alarm(event_handler)
 
     # Start TCP server
     TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
@@ -218,6 +233,8 @@ if __name__ == "__main__":
         for thrd in enumerate():
             print(thrd.name)
         print()
+
+
 
 
         time.sleep(10)
