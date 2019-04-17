@@ -4,4 +4,4 @@
 server/server.conf
 server/__pycache__
 server/.*
-*NodeConfig.h
+NodeConfig.h
