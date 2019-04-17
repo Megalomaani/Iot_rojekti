@@ -12,10 +12,6 @@
 
 #define USE_HARD_CODED_WIFI_SETTINGS true
 
-#ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
-#endif
 
 #define NODE_CMD_AMOUNT_MAX 5
 #define NODE_CMD_AMOUNT 2

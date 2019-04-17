@@ -19,8 +19,8 @@ const char* password = STAPSK;
 
 
 
-const char* host = "10.42.0.127";
-const uint16_t port = 2500;
+const char* host = SERVER_HOST;
+const uint16_t port = SERVER_PORT;
 
 
 String handleCommands(){
