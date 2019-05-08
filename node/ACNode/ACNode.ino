@@ -12,6 +12,8 @@
 
 #define NODE_ID "1234"
 
+#define pwm_pin D7
+
 const short int BUILTIN_LED1 = 2; //GPIO2
 const short int BUILTIN_LED2 = 16;//GPIO16
 
@@ -30,6 +32,8 @@ const char* password = STAPSK;
 //const char* host = "192.168.10.34";  //narva
 const char* host = "192.168.10.45";  //Herwood
 const uint16_t port = 2500;
+
+int adc_val = 0;
 
 WiFiClient client;
 
@@ -162,6 +166,12 @@ void setup() {
   pinMode(D2, OUTPUT); // 
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
   digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+
+  //Setup ADC
+  pinMode(A0, INPUT);
+
+  // Setup PWM
+  analogWriteFreq(500); //3000 ok
   
   delay(200);
   Serial.begin(9600);
@@ -171,8 +181,8 @@ void setup() {
 
   client.setNoDelay(true);
   
-  connectToWifi();
-  connectToServer();
+  //connectToWifi();
+  //connectToServer();
     
 }
 
@@ -180,7 +190,40 @@ void setup() {
 
 void loop() {
 
+  adc_val = analogRead(A0);
+
+  if(adc_val > 1000){
+
+    digitalWrite(pwm_pin, HIGH);
+    
+  }else if(adc_val < 20){
+
+    digitalWrite(pwm_pin, LOW);
+        
+  }else if(adc_val < 35){
+     analogWrite(pwm_pin, 5);
+  }else{
+    
+    analogWrite(pwm_pin, adc_val);
+    
+  }
   
+  Serial.print("ADC: ");
+  Serial.println(adc_val);
+
+  
+
+  delay(100);
+  
+  
+
+  
+
+}
+
+
+/*
+
   
   // Listen for incoming nodeCMDs
   if(client.available()){
@@ -247,4 +290,8 @@ void loop() {
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
   delay(50);
 
-}
+
+
+
+ 
+ */
