@@ -251,7 +251,7 @@ if __name__ == "__main__":
     # DEBUG Add Dummy nodes
     if True:
         server_util.attach_node("dummy_1", "NO_THREAD", ["LIGHT_ON", "LIGHT_OF"])
-        server_util.attach_node("dummy_2", "NO_THREAD", ["MAKE_RAIN", "DO_THING"])
+        server_util.attach_node("dummy_2", "NO_THREAD", ["MAKE_RAIN", "DO_THING", "KILL_TIME?color", "EXPLODE"])
 
     server_util.log("Server started")
 
