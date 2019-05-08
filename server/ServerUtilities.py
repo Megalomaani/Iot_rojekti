@@ -80,7 +80,8 @@ class ServerUtilities:
         nodelist = []
 
         for node_id in self.TCP_nodes.keys():
-            nodelist.append({"ID": node_id, "CMDS": self.TCP_nodes[node_id].get_node_cmd_list()})
+            nodelist.append({"ID": node_id,"STATUS":self.TCP_nodes[node_id].get_status(),
+                             "CMDS": self.TCP_nodes[node_id].get_node_cmd_list()})
 
         node_info = {"TCP_NODES": nodelist}
 

@@ -337,7 +337,7 @@ function onMessage(evt){
             nodeHTML += "<div class=\"node_block\">";
 
             nodeHTML += "<h3>ID: " + nodes.TCP_NODES[i].ID + "</h3>";
-            nodeHTML += "<p id=\"NodeStatus_" + nodes.TCP_NODES[i].ID + "\" >Status: Connected</p>";
+            nodeHTML += "<p id=\"NodeStatus_" + nodes.TCP_NODES[i].ID + "\" >Status: "+ nodes.TCP_NODES[i].STATUS +"</p>";
             nodeHTML += "<p>Type RnD</p>";
             nodeHTML += "<h3>NodeCMDs</h3>";
 

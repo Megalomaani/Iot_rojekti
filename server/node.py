@@ -22,6 +22,12 @@ class Node:
     def is_connected(self):
         return self.connected
 
+    def get_status(self):
+        if(self.connected is True):
+            return "Connected"
+        else:
+            return "Disconnected"
+
     def get_node_cmd_list(self):
         return self.nodeCMDs
 
