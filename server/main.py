@@ -3,7 +3,7 @@
 
 from threading import Thread, Lock, enumerate
 import time
-import subprocess
+#import subprocess
 from _datetime import datetime
 
 import TCPServer
@@ -13,7 +13,7 @@ import WSServer
 import EventHandler
 import Alarm
 import PhonePing
-import speech
+#import speech
 
 
 running = True
@@ -227,9 +227,9 @@ if __name__ == "__main__":
 
     #pinger = start_phone_pinger(event_handler)
 
-    s = speech.SpeechRecognizer5000(speechCallback, event_handler)
-    time.sleep(2)
-    s.startListening()
+    #s = speech.SpeechRecognizer5000(speechCallback, event_handler)
+    #time.sleep(2)
+    #s.startListening()
 
     # Start TCP server
     TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
