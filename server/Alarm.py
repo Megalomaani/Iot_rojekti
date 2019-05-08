@@ -14,6 +14,7 @@ class Alarm():
         self.timer = 0
         self.trigger_function = trigger_function
         self.args = args
+        self.alarms = {}
 
         self.readAlarms()
 
@@ -33,11 +34,16 @@ class Alarm():
         str = "self.trigger_function("
         for i in range(len(self.args)):
             str += "self.args[{}]".format(i) + ","
-            print(i)
+            #print(i)
 
         str = str[:-1]
         str += ")"
-        eval(str)
+
+        try:
+            eval(str)
+        except TypeError:
+            print("Error: Too many arguments given for trigger_function in constructor")
+
 
 
         if self.alarms[id]["repeat"] == "no":
@@ -62,7 +68,7 @@ class Alarm():
         alarmID = 0
         while str(alarmID) in self.alarms.keys():
             alarmID += 1
-            print(alarmID)
+            #print(alarmID)
 
 
         self.alarms[str(alarmID)] = alarm
@@ -74,7 +80,13 @@ class Alarm():
 
     def readAlarms(self):
         with open("alarms.json", 'r') as infile:
-            self.alarms = json.load(infile)
+            try:
+                self.alarms = json.load(infile)
+                return True
+            except json.JSONDecodeError:
+                self.alarms = {}
+                #print("alarms.json empty")
+                return False
 
     def saveAlarms(self):
         with open('alarms.json', 'w') as outfile:
@@ -88,7 +100,7 @@ class Alarm():
         if alarmID in self.alarms.keys():
             del self.alarms[alarmID]
         else:
-            print("Alarm ID not found!")
+            print("Error: Alarm ID not found!")
 
         self.saveAlarms()
         self.startTimer()
@@ -114,7 +126,7 @@ class Alarm():
             self.timer = 0
             return
         alarmID = 0
-        for alarm in self.alarms.values():
+        for id, alarm in self.alarms.items():
             daysList = list( rrule(WEEKLY, count = len(alarm["wdays"] * 2), byweekday=tuple(alarm["wdays"])) )
             i = 0
             for day in daysList:
@@ -124,6 +136,7 @@ class Alarm():
                 delta = day - self.currentTime
                 if delta < nextAlarmDelta and delta.days >= 0:
                     nextAlarmDelta = delta
+                    alarmID = id
 
                 #print(daysList)
 
@@ -136,7 +149,8 @@ class Alarm():
         print("Timer start, {:02} days, {:02} hours, {:02} minutes, {:02} seconds until next alarm".format(int(days),int(hours), int(minutes), int(seconds)))
         #print(time.time()-tim)
         #todo: args to correct alarm id
-        self.timer = threading.Timer(nextAlarmDelta.total_seconds(), self.triggerAlarm, args="0")
+        self.timer = threading.Timer(nextAlarmDelta.total_seconds(), self.triggerAlarm, args=str(alarmID))
+        self.timer.name = "AlarmTimerThread"
         self.timer.start()
 
 

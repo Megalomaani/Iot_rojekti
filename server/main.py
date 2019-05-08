@@ -3,6 +3,7 @@
 
 from threading import Thread, Lock, enumerate
 import time
+import subprocess
 from _datetime import datetime
 
 import TCPServer
@@ -11,6 +12,8 @@ import UIServer
 import WSServer
 import EventHandler
 import Alarm
+import PhonePing
+import speech
 
 
 running = True
@@ -175,9 +178,21 @@ def start_event_handler(s_util):
 def start_alarm(event_hand):
 
     alarm = Alarm.Alarm(event_hand.node_trigger, 69, 1)
-    alarm.setAlarm("a", [0,1], 21, 50, "yes")
+    #alarms should not be set here
+    alarm.setAlarm("a", [0], 13, 51, "no")
+    alarm.setAlarm("b", [0], 13, 55, "no")
 
     return alarm
+
+def start_phone_pinger(event_hand):
+
+    pinger = PhonePing.wifiPinger("10.42.0.102", event_hand.node_trigger, 69, 1)
+    return pinger
+
+def speechCallback(phrase, event_hand):
+
+    if phrase == "light on":
+        event_hand.node_trigger(69, 1)
 
 
 
@@ -203,6 +218,12 @@ if __name__ == "__main__":
 
     alarm = start_alarm(event_handler)
 
+    #pinger = start_phone_pinger(event_handler)
+
+    s = speech.SpeechRecognizer5000(speechCallback, event_handler)
+    time.sleep(2)
+    s.startListening()
+
     # Start TCP server
     TCP_server, TCP_server_thread = start_tcp_server(server_util, event_handler)
 
@@ -224,6 +245,7 @@ if __name__ == "__main__":
 
     while running:
 
+        print()
         now = datetime.now()
         print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
         print("TCP Server running: {}".format(TCP_server_thread.isAlive()))

@@ -138,6 +138,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.ID = self.receive()
         print("Received ID: ", self.ID)
 
+        cur_thread.name = self.ID + "_NodeThread"
+
         cmds = []
         self.send("SEND_CMDS")
         cmds.append(self.receive())
