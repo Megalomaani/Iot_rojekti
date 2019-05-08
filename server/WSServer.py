@@ -37,7 +37,6 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.lock.release()
         print("...released\n")
 
-
     def send(self, msg):
         self.request.sendall(msg.encode())
 
@@ -123,14 +122,7 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                             # self.send_frame("Received GET".encode('utf-8'))
 
                             if received[1] == "NODE_INFO":
-                                node_info = {
-                                    "TCP_NODES": [
-                                        {"ID": "1234", "CMDS": ["LIGHT_ON", "LIGHT_OFF"]},
-                                        {"ID": "666", "CMDS": ["LIGHT_ON", "LIGHT_OFF"]}
-                                    ]
-                                }
 
-                                #self.send_frame("NODE_INFO/{}".format(json.dumps(node_info)).encode('utf-8'))
                                 self.get_lock()
                                 self.send_frame("NODE_INFO/{}".format(self.server.server_util.get_node_json()).encode('utf-8'))
                                 self.unlock()
@@ -147,6 +139,10 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                             self.send_frame(ok_msg.encode('utf-8'))
 
                             self.unlock()
+
+                        elif received[0] == "PINGME":
+                            print("Received Ping request")
+                            self.send_ping()
 
 
                     except Exception as e:
@@ -196,6 +192,9 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def decode_frame(self,frame):
         opcode_and_fin = frame[0]
+
+        print("FIN + OPCODE: {}".format(opcode_and_fin))
+        print("DECODED: {}".format(bin(opcode_and_fin)))
 
         # assuming it's masked, hence removing the mask bit(MSB) to get len. also assuming len is <125
         payload_len = frame[1] - 128
@@ -247,6 +246,47 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         else:
             print("TOO LONG payload! Length: {}".format(plen))
+
+    def send_ping(self):
+
+        payload = "Pimpelipompelipinggiaompeli".encode('utf-8')
+
+        plen = len(payload)
+
+        if plen <= 125:
+
+            # setting fin to 1 and opcpde to 0x9 (10001001)
+            frame = [137]
+            # adding len. no masking hence not doing +128
+            frame += [len(payload)]
+            # adding payload
+            frame_to_send = bytearray(frame) + payload
+
+
+            print("Sending ping!")
+
+            self.request.sendall(frame_to_send)
+
+            print("Ping sent.")
+
+    def send_pong(self, payload):
+
+        plen = len(payload)
+
+        if plen <= 125:
+            print("Payload length: {}".format(plen))
+            # setting fin to 1 and opcpde to 0x9 (10001001)
+            frame = [137]
+            # adding len. no masking hence not doing +128
+            frame += [len(payload)]
+            # adding payload
+            frame_to_send = bytearray(frame) + payload
+
+            print(frame)
+            print(bytearray(frame))
+            print(frame_to_send)
+
+            self.request.sendall(frame_to_send)
 
 
 class WSThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

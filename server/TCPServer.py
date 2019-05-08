@@ -91,16 +91,16 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         if self.pinging is True and self.loopsSincePing == self.pingRate:
             self.send("PING")
             self.loopsSincePing = 0
-            # print("SENT PING")
+            print("SENT PING")
 
             # ping
             if self.receive(timeout=self.pingMaxTime) == "PONG":
                 self.pingsMissed = 0
-                # print("GOT PONG")
+                print("GOT PONG")
 
             else:
                 self.pingsMissed += 1
-                # print("NO RESPONSE!")
+                print("NO RESPONSE!")
 
             # Disconnect if too many missed pings
             if self.pingsMissed > self.pingMissCutout:
@@ -119,6 +119,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         # read connection parameters from server
         self.set_params()
+
+        print("TCPServer settings")
+        print("Pinging: {}".format(self.pinging))
 
         # Setup thread ref and lock
         cur_thread = threading.current_thread()

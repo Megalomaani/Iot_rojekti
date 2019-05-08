@@ -1,0 +1,15 @@
+Things to do:
+
+MUST DO:
+- WSServer rewrite
+
+
+
+SHOULD DO:
+
+-Rewrite server receive methods (make non blocking)
+-Take a look and enable pinging
+-Add reset methods to servers
+-Add support for manually removing nodes
+
+COULD DO:
