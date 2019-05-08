@@ -257,19 +257,19 @@ if __name__ == "__main__":
 
     while running:
 
-        print()
+        print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+        print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
         now = datetime.now()
         print("{}:{}:{} Main loop".format(now.hour, now.minute, now.second))
         print("TCP Server running: {}".format(TCP_server_thread.isAlive()))
         print("UI Server running: {}".format(UI_server_thread.isAlive()))
         server_util.list_nodes(True)
+        print("---------------------")
         print("Threads running:")
         for thrd in enumerate():
             print(thrd.name)
-        print()
-
-
-
+        print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+        print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
 
         time.sleep(10)
 
