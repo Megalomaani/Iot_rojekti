@@ -118,6 +118,7 @@ def start_tcp_server(s_util, event_hand):
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
     server_thread = Thread(target=server.serve_forever)
+    server_thread.setName("TCP_ServerThread")
 
     # Exit the server thread when the main thread terminates
     server_thread.daemon = True
@@ -138,6 +139,7 @@ def start_ui_server(s_util):
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
     ui_server_thread = Thread(target=ui_server.serve_forever)
+    ui_server_thread.setName("UI_ServerThread")
 
     # Exit the server thread when the main thread terminates
     ui_server_thread.daemon = True
@@ -158,6 +160,7 @@ def start_ws_server(s_util):
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
     ws_server_thread = Thread(target=ws_server.serve_forever)
+    ws_server_thread.setName("WSS_ServerThread")
 
     # Exit the server thread when the main thread terminates
     ws_server_thread.daemon = True

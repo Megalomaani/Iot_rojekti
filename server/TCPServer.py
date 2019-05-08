@@ -112,7 +112,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 self.unlock()
         elif self.pinging is True:
             self.loopsSincePing += 1
-            # print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
+            print("No Ping, loop {} , pingRate {}".format(self.loopsSincePing, self.pingRate))
 
     # Handler for individual connection. The good stuff
     def handle(self):
@@ -125,6 +125,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         # Setup thread ref and lock
         cur_thread = threading.current_thread()
+
         self.lock = self.server.server_util.get_master_lock()
 
         # Read initial message
@@ -141,7 +142,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         self.ID = self.receive()
         print("Received ID: ", self.ID)
 
-        cur_thread.name = self.ID + "_NodeThread"
+        cur_thread.setName("NodeThread_{}".format(self.ID))
 
         cmds = []
         self.send("SEND_CMDS")
@@ -292,6 +293,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.server_util = SU
         self.ID = settings.ID
         self.event_handler = event_hand
+
 
         # Pinging settings
         self.pinging = settings.pinging
