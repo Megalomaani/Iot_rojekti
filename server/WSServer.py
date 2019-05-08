@@ -83,6 +83,7 @@ class WSThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         self.server.server_util.log("WSServer: New connection: {} -- WS Client:  {}".format(threading.current_thread()
                                                                                             .name, self.client_address))
+        cur_thread.setName("WebUI_Thread_{}".format(self.client_address))
 
         print(self.data)
 
