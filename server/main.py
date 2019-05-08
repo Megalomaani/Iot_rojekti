@@ -5,6 +5,8 @@ from threading import Thread, Lock, enumerate
 import time
 #import subprocess
 from _datetime import datetime
+import ast
+
 
 import TCPServer
 import ServerUtilities
@@ -63,7 +65,7 @@ def read_server_config():
 
             # setting TCPServer params
             tcp_settings.ID = params["server_ID"]
-            tcp_settings.pinging = params["TCP_EnablePinging"]
+            tcp_settings.pinging = ast.literal_eval(params["TCP_EnablePinging"])
             tcp_settings.pingMissCutout = int(params["TCP_pingMissCutout"])
             tcp_settings.pingMaxTime = int(params["pingMaxTime"])
             tcp_settings.pingRate = int(params["pingRate"])
