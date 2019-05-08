@@ -120,6 +120,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # read connection parameters from server
         self.set_params()
 
+        print("TCPServer settings")
+        print("Pinging: {}".format(self.pinging))
+
         # Setup thread ref and lock
         cur_thread = threading.current_thread()
         self.lock = self.server.server_util.get_master_lock()

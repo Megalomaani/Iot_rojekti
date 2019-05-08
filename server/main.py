@@ -101,6 +101,13 @@ def start_server_utilities():
 def start_tcp_server(s_util, event_hand):
 
     print("Starting TCP server ...")
+    print("Server parameters:")
+    print("server_ID: {}".format(tcp_settings.ID))
+    print("TCP_EnablePinging: {}".format(tcp_settings.pinging))
+    print("TCP_pingMissCutout: {}".format(tcp_settings.pingMissCutout))
+    print("pingMaxTime: {}".format(tcp_settings.pingMaxTime))
+    print("pingRate: {}".format(tcp_settings.pingRate))
+
     server = TCPServer.ThreadedTCPServer(HOST, PORT, TCPServer.ThreadedTCPRequestHandler, tcp_settings,
                                          s_util, event_hand)
     ip, port = server.server_address
