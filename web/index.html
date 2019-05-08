@@ -209,7 +209,7 @@ body {font-family: Arial;}
 
 <script>
 
-var useLocalhost = false;
+var useLocalhost = true; //REMEMBER TO CHANGE!
 
 var wsLOCUri = "ws://localhost:2700";
 var wsLANUri = "ws://192.168.10.45:2700";
@@ -337,21 +337,64 @@ function onMessage(evt){
             nodeHTML += "<div class=\"node_block\">";
 
             nodeHTML += "<h3>ID: " + nodes.TCP_NODES[i].ID + "</h3>";
-            nodeHTML += "<p id=\"NodeStatus_" + nodes.TCP_NODES[i].ID + "\" >Status: "+ nodes.TCP_NODES[i].STATUS +"</p>";
+            nodeHTML += "<p id=\"NodeStatus_" + nodes.TCP_NODES[i].ID
+                      + "\" >Status: "+ nodes.TCP_NODES[i].STATUS +"</p>";
             nodeHTML += "<p>Type RnD</p>";
             nodeHTML += "<h3>NodeCMDs</h3>";
 
             for (j in nodes.TCP_NODES[i].CMDS) {
 
-              nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
-                              + nodes.TCP_NODES[i].ID
-                              + "/"
-                              + nodes.TCP_NODES[i].CMDS[j]
-                              + "&quot;)\">"
-                              + nodes.TCP_NODES[i].CMDS[j]
-                              + "</button>";
+              if ( j%2 == 0) {
+                nodeHTML += "<br>";
+              }
+
+              var split_cmd = nodes.TCP_NODES[i].CMDS[j].split("?");
+              console.log(nodes.TCP_NODES[i].CMDS[j]);
+              console.log(split_cmd);
+
+              var cmd = nodes.TCP_NODES[i].CMDS[j];
+
+
+
+              if (split_cmd.length == 1) {
+
+                nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
+                                + nodes.TCP_NODES[i].ID
+                                + "/"
+                                + nodes.TCP_NODES[i].CMDS[j]
+                                + "&quot;)\">"
+                                + nodes.TCP_NODES[i].CMDS[j]
+                                + "</button>";
+
+              }else if (split_cmd.length == 2) {
+
+                if (split_cmd[1] == "color") {
+
+                  nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"R\" value=\"R\">";
+                  nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"G\" value=\"G\">";
+                  nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"B\" value=\"B\">";
+                  nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
+                                  + nodes.TCP_NODES[i].ID
+                                  + "/"
+                                  + split_cmd[0]
+                                  + "?"
+                                  + "&quot;"
+                                  + " + document.getElementById(&quot;"+split_cmd[0]+"R"+"&quot;).value"
+                                  + " + document.getElementById(&quot;"+split_cmd[0]+"G"+"&quot;).value"
+                                  + " + document.getElementById(&quot;"+split_cmd[0]+"B"+"&quot;).value"
+                                  +")\">"
+                                  + "Set"
+                                  + "</button>";
+
+                  nodeHTML += "<br>"
+                }
+
+                //document.getElementById("serverInput").value
+
+              }
 
             }
+
             nodeHTML += "</div>";
           }
 
