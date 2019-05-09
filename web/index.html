@@ -123,6 +123,7 @@ body {font-family: Arial;}
 </style>
 </head>
 <body>
+<h2>L.U.N.A.S</h2>
 
 <div class="tab">
   <button id="dashButton" class="tablinks" onclick="openCity(event, 'Dash')">Dashboard</button>
@@ -353,6 +354,9 @@ function onMessage(evt){
               console.log(split_cmd);
 
               var cmd = nodes.TCP_NODES[i].CMDS[j];
+              var node_id = nodes.TCP_NODES[i].ID;
+
+
 
 
 
@@ -368,8 +372,11 @@ function onMessage(evt){
 
               }else if (split_cmd.length == 2) {
 
-                if (split_cmd[1] == "color") {
 
+
+                if (split_cmd[1] == "color") {             //FORMAT: *?color
+
+                  nodeHTML += "<span>" + split_cmd[0] + "</span>";
                   nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"R\" value=\"R\">";
                   nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"G\" value=\"G\">";
                   nodeHTML += "<input size=\"1\" type=\"text\" id=\""+split_cmd[0]+"B\" value=\"B\">";
@@ -387,9 +394,68 @@ function onMessage(evt){
                                   + "</button>";
 
                   nodeHTML += "<br>"
+
                 }
 
-                //document.getElementById("serverInput").value
+
+
+              }else if (split_cmd.length == 3) {
+
+                if (split_cmd[1] == "int") {
+
+
+                    var int_params = split_cmd[2].split(";"); //(FULL)FORMAT: *?int?low_lim;high_lim;increment
+
+                    if (int_params.length == 1) {             //FORMAT: *?int?high_lim
+
+                      nodeHTML += "<span>" + split_cmd[0] + "</span>";
+                      nodeHTML += "<input type=\"range\" id=\""+split_cmd[0]
+                                +"\"  min=\"1\"  max=\""+int_params[0]
+                                +"\" value=\""+int_params[0]/2+"\">";
+
+                      nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
+                                      + nodes.TCP_NODES[i].ID
+                                      + "/"
+                                      + split_cmd[0]
+                                      + "?"
+                                      + "&quot;"
+                                      + " + document.getElementById(&quot;"+split_cmd[0]+"&quot;).value"
+                                      +")\">"
+                                      + "Set"
+                                      + "</button>";
+                      nodeHTML += "<br>"
+
+                      //<input type="range" min="1" max="100" value="50">
+
+                    }else if (int_params.length == 2) {     //FORMAT: *?int?low_lim;high_lim
+
+                      nodeHTML += "<span>" + split_cmd[0] + "</span>";
+                      nodeHTML += "<br>";
+                      nodeHTML += "<input type=\"range\" id=\""+split_cmd[0]
+                                +"\"  min=\""+int_params[0]
+                                +"\"  max=\""+int_params[1]
+                                +"\" value=\""+int_params[1]/2+"\">";
+
+                      nodeHTML += "<button onclick=\"sendNodeCMDToServer(&quot;"
+                                      + nodes.TCP_NODES[i].ID
+                                      + "/"
+                                      + split_cmd[0]
+                                      + "?"
+                                      + "&quot;"
+                                      + " + document.getElementById(&quot;"+split_cmd[0]+"&quot;).value"
+                                      +")\">"
+                                      + "Set"
+                                      + "</button>";
+                      nodeHTML += "<br>";
+
+                    }else if (int_params.length == 3) {     //(FULL)FORMAT: *?int?low_lim;high_lim;increment
+                        //TODO Implement!
+
+                    }
+
+
+
+                }
 
               }
 
