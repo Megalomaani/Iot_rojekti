@@ -5,6 +5,7 @@
 
 #include <ESP8266WiFi.h>
 
+
 #ifndef STASSID
 #define STASSID "Lohiverkko"
 #define STAPSK  "88888888"
@@ -20,10 +21,12 @@ const short int BUILTIN_LED2 = 16;//GPIO16
 
 //nodeCMD list
 
-const String node_CMDs[] = {"LIGHT_ON", "LIGHT_OFF"};
+const String node_CMDs[] = {"FAN_ON", "FAN_OFF", "SET_SPEED?int?45;1000"};
 
 
 String data = "NULL";
+String cmd = "NULL";
+int sep_ind = -1;
 
 const char* ssid     = STASSID;
 const char* password = STAPSK;
@@ -33,7 +36,17 @@ const char* password = STAPSK;
 const char* host = "192.168.10.45";  //Herwood
 const uint16_t port = 2500;
 
+int adc_values[] = {0,0,0,0,0,0,0,0,0,0};
+
 int adc_val = 0;
+
+int manual_setting = 0;
+int automation_setting = 0;
+int fanspeed = 0;
+
+int switch_treshold = 200;
+
+bool manual_mode = true;
 
 WiFiClient client;
 
@@ -139,7 +152,7 @@ void connectToServer(){
   }
 
   // SEND COMMAND LIST
-  for(int i = 0; i < 2;i++){
+  for(int i = 0; i < 3;i++){
     Serial.println("sent cmd");
     client.print(node_CMDs[i]);
     delay(50); //TODO Test if neccesary
@@ -181,8 +194,75 @@ void setup() {
 
   client.setNoDelay(true);
   
-  //connectToWifi();
-  //connectToServer();
+  connectToWifi();
+  connectToServer();
+    
+}
+
+
+void read_pot(){
+
+  for(int i = 0; i < 9; i++){
+    
+    adc_values[i] = adc_values[i+1];    
+    
+  }
+
+  adc_values[9] = analogRead(A0);
+
+  adc_val = 0;
+  
+  for(int i = 0; i < 10; i++){
+    
+    adc_val += adc_values[i];
+    
+  }
+
+  adc_val = adc_val/10;
+  
+  Serial.print("ADC: " );
+  Serial.print(adc_val);
+   
+}
+
+
+void adjust_fans(){
+
+  if(manual_mode){
+
+    manual_setting = adc_val;
+    fanspeed = manual_setting;
+
+    
+    Serial.print(" <MANUAL> FanSpeed: " );
+    Serial.print(fanspeed);
+    
+  }else{
+
+    if(abs(manual_setting-adc_val) > switch_treshold){
+      manual_mode = true;
+    }
+
+    fanspeed = automation_setting;
+
+    Serial.print(" <AUTO> FanSpeed: " );
+    Serial.print(fanspeed);
+   
+  }
+
+  if(fanspeed > 1000){
+
+    digitalWrite(pwm_pin, HIGH);
+    
+  }else if(fanspeed < 40){
+
+    digitalWrite(pwm_pin, LOW);
+        
+  }else if(fanspeed > 45){
+    
+    analogWrite(pwm_pin, fanspeed);
+    
+  }
     
 }
 
@@ -190,73 +270,68 @@ void setup() {
 
 void loop() {
 
-  adc_val = analogRead(A0);
-
-  if(adc_val > 1000){
-
-    digitalWrite(pwm_pin, HIGH);
-    
-  }else if(adc_val < 20){
-
-    digitalWrite(pwm_pin, LOW);
-        
-  }else if(adc_val < 35){
-     analogWrite(pwm_pin, 5);
-  }else{
-    
-    analogWrite(pwm_pin, adc_val);
-    
-  }
-  
-  Serial.print("ADC: ");
-  Serial.println(adc_val);
-
-  
-
-  delay(100);
-  
-  
-
-  
-
-}
-
-
-/*
-
+  read_pot();
+  adjust_fans();
   
   // Listen for incoming nodeCMDs
   if(client.available()){
+    
     digitalWrite(BUILTIN_LED1, LOW); // Turn the LED ON by making the voltage LOW
     data = client.readStringUntil('#');
     digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
     Serial.println(data); 
 
+    sep_ind = data.indexOf('?');
+
+    if(sep_ind != -1){
+
+      cmd = data.substring(0,sep_ind);
+      
+    }else{
+
+      cmd = data;
+      
+    }
+
     // Test cmd
-    if(data == "LIGHT_ON"){
+    if(cmd == "FAN_ON"){        // Turn on fan
   
       digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
 
-      
-      digitalWrite(D1, HIGH); // Turn on Relay
-      digitalWrite(D2, HIGH); // Turn on IND_LED
-      
+      manual_mode = false;
+
+      if(automation_setting < 50){
+        automation_setting = 200;
+      }
+          
       client.print("OK");
       
-    }else if(data == "LIGHT_OFF"){
+      
+    }else if(cmd == "FAN_OFF"){   // Turn off fan
       
       digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
 
-      digitalWrite(D1, LOW); // Turn off Relay
-      digitalWrite(D2, LOW); // Turn off IND_LED
+      manual_mode = false;
+
+      automation_setting = 0;      
       
       client.print("OK");
       
-    }else if(data == "PING"){
+    }else if(cmd == "SET_SPEED"){ // Set fan speed
+      
+      digitalWrite(BUILTIN_LED2, LOW); // Turn the LED on by making the voltage LOW
+
+      manual_mode = false;
+
+      automation_setting = data.substring(sep_ind + 1).toInt();      
+      
+      client.print("OK");
+      
+    }else if(cmd == "PING"){
       
       client.print("PONG");
       
-    }else if(data == "NULL"){
+    }else if(cmd == "NULL"){
   
       client.print("NULL");
       
@@ -284,14 +359,10 @@ void loop() {
       
       Serial.println("No connection! Rebooting...");
       ESP.restart();
-    }
-  
+    }  
   }
-  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED ON by making the voltage LOW
-  delay(50);
 
+  digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED OFF by making the voltage HIGH
+  delay(20);
 
-
-
- 
- */
+}
