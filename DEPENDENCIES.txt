@@ -1,0 +1,12 @@
+Must have
+-haproxy
+-apache2
+-timerutil3
+-bash
+-service
+
+Remote access
+- Router port forwarding
+	-SSH, Websocket, http
+- Haproxy
+

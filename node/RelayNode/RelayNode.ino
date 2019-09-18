@@ -11,9 +11,11 @@
 #define STAPSK  "88888888"
 #endif
 
-#define NODE_ID "AC117"
+#define NODE_ID "Relay1"
 
 #define pwm_pin D7
+#define STATUS_LED D1
+#define RELAY_EN D2
 
 const short int BUILTIN_LED1 = 2; //GPIO2
 const short int BUILTIN_LED2 = 16;//GPIO16
@@ -21,7 +23,7 @@ const short int BUILTIN_LED2 = 16;//GPIO16
 
 //nodeCMD list
 
-const String node_CMDs[] = {"FAN_ON", "FAN_OFF", "SET_SPEED?int?45;1000"};
+const String node_CMDs[] = {"ON", "OFF"};
 
 
 String data = "NULL";
@@ -31,22 +33,12 @@ int sep_ind = -1;
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
+//const char* host = "192.168.0.9";  //Riksu
 //const char* host = "192.168.1.35";  //marppanet
 //const char* host = "192.168.10.34";  //narva
 const char* host = "192.168.10.45";  //Herwood
 const uint16_t port = 2500;
 
-int adc_values[] = {0,0,0,0,0,0,0,0,0,0};
-
-int adc_val = 0;
-
-int manual_setting = 0;
-int automation_setting = 0;
-int fanspeed = 0;
-
-int switch_treshold = 200;
-
-bool manual_mode = true;
 
 WiFiClient client;
 
@@ -161,6 +153,8 @@ void connectToServer(){
   Serial.println("Sending END");
   client.print("END");
   //client.receive();
+
+   digitalWrite(STATUS_LED, HIGH); // Turn on STATUS_LED
   
 
   //delay(500);
@@ -172,122 +166,42 @@ void connectToServer(){
 
 void setup() {
 
-  // Setup LEDs
+  // Setup Pins
   pinMode(BUILTIN_LED1, OUTPUT); // Initialize the BUILTIN_LED1 pin as an output
   pinMode(BUILTIN_LED2, OUTPUT); // Initialize the BUILTIN_LED2 pin as an output
-  pinMode(D1, OUTPUT); //
-  pinMode(D2, OUTPUT); // 
+  pinMode(STATUS_LED, OUTPUT); //
+  pinMode(RELAY_EN, OUTPUT); // 
+  
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
   digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(STATUS_LED, LOW); // Turn the LED off by making the voltage HIGH
+  digitalWrite(RELAY_EN, LOW); // Turn the LED off by making the voltage HIGH
 
-  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED1, LOW); 
   delay(500);
-  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED1, HIGH); 
   delay(500);
-  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED1, LOW); 
   delay(500);
-  digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
+  digitalWrite(BUILTIN_LED1, HIGH); 
   
   
 
-  //Setup ADC
-  pinMode(A0, INPUT);
-
-  // Setup PWM
-  analogWriteFreq(500); //3000 ok
-  
-  delay(200);
-  Serial.begin(9600);
-  delay(200);
-  Serial.println();
-  Serial.println();
-  Serial.println("Booting..");
 
   client.setNoDelay(true);
   
-  //connectToWifi();
-  //connectToServer();
+  connectToWifi();
+  connectToServer();
     
 }
 
 
-void read_pot(){
 
-  for(int i = 0; i < 9; i++){
-    
-    adc_values[i] = adc_values[i+1];    
-    
-  }
-
-  adc_values[9] = analogRead(A0);
-
-  adc_val = 0;
-  
-  for(int i = 0; i < 10; i++){
-    
-    adc_val += adc_values[i];
-    
-  }
-
-  adc_val = adc_val/10;
-  
-  Serial.print("ADC: " );
-  Serial.print(adc_val);
-   
-}
-
-
-void adjust_fans(){
-
-  if(manual_mode){
-
-    manual_setting = adc_val;
-    fanspeed = manual_setting;
-
-    
-    Serial.print(" <MANUAL> FanSpeed: " );
-    Serial.print(fanspeed);
-    
-  }else{
-
-    if(abs(manual_setting-adc_val) > switch_treshold){
-      manual_mode = true;
-    }
-
-    fanspeed = automation_setting;
-
-    Serial.print(" <AUTO> FanSpeed: " );
-    Serial.print(fanspeed);
-   
-  }
-
-  if(fanspeed > 1000){
-
-    digitalWrite(pwm_pin, HIGH);
-    
-  }else if(fanspeed < 40){
-
-    digitalWrite(pwm_pin, LOW);
-        
-  }else if(fanspeed > 45){
-    
-    analogWrite(pwm_pin, fanspeed);
-    
-  }
-    
-}
 
 
 
 void loop() {
   
-  //Serial.println(); 
-  read_pot();
-  adjust_fans();
-  delay(50);
-  
-}
-  /* Marppa Edition
   
   // Listen for incoming nodeCMDs
   if(client.available()){
@@ -310,38 +224,19 @@ void loop() {
     }
 
     // Test cmd
-    if(cmd == "FAN_ON"){        // Turn on fan
-  
-      digitalWrite(BUILTIN_LED2, LOW); // Turn the LED ON by making the voltage LOW 
+    if(cmd == "ON"){        // Turn on fan
 
-      manual_mode = false;
+      digitalWrite(RELAY_EN, HIGH); // Close relay 
 
-      if(automation_setting < 50){
-        automation_setting = 200;
-      }
-          
       client.print("OK");
       
       
-    }else if(cmd == "FAN_OFF"){   // Turn off fan
+    }else if(cmd == "OFF"){   // Turn off fan
       
-      digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
-
-      manual_mode = false;
-
-      automation_setting = 0;      
+      digitalWrite(RELAY_EN, LOW); // Open relay 
       
       client.print("OK");
       
-    }else if(cmd == "SET_SPEED"){ // Set fan speed
-      
-      digitalWrite(BUILTIN_LED2, LOW); // Turn the LED on by making the voltage LOW
-
-      manual_mode = false;
-
-      automation_setting = data.substring(sep_ind + 1).toInt();      
-      
-      client.print("OK");
       
     }else if(cmd == "PING"){
       
@@ -360,7 +255,18 @@ void loop() {
   }else if(!client.connected()){
     Serial.println("Connection to server lost!");
     Serial.println("Waiting for connection...");
-    delay(5000);
+
+    for(int i = 0; i < 6; i++){ // Flash STATUS_LED
+    
+      digitalWrite(STATUS_LED, LOW); 
+      delay(500);
+      digitalWrite(STATUS_LED, HIGH); 
+      delay(500);  
+      
+    }
+    
+    digitalWrite(STATUS_LED, LOW); 
+     
     if(!client.connected()){
       
       Serial.println("No connection! Reconnecting...");
@@ -370,6 +276,7 @@ void loop() {
   }else if(WiFi.status() != WL_CONNECTED){
     Serial.println("Connection to Wifi lost");
     Serial.println("Waiting for connection...");
+    digitalWrite(STATUS_LED, LOW); 
     delay(5000);
     if(!client.connected()){
       
@@ -382,5 +289,3 @@ void loop() {
   delay(20);
 
 }
-
-*/
