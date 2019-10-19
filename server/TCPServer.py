@@ -83,7 +83,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         if timeout:
             self.request.settimeout(oldTimeout)
 
-        print("Server received: {}".format(data))
+        print("Thread {} received: {}".format(threading.current_thread(), data))
         return data
 
     def ping(self):
