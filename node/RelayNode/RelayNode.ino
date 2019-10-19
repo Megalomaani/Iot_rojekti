@@ -11,7 +11,8 @@
 #define STAPSK  "88888888"
 #endif
 
-#define NODE_ID "Relay1"
+#define NODE_ID "RelayNode"
+String NODE_ID_U = "UNDEFINED";
 
 #define pwm_pin D7
 #define STATUS_LED D1
@@ -126,8 +127,8 @@ void connectToServer(){
   }
 
   Serial.print("Sending ID: ");
-  Serial.println(NODE_ID);  
-  client.print(NODE_ID);
+  Serial.println(NODE_ID_U);  
+  client.print(NODE_ID_U);
 
   
   // wait for the response from server
@@ -174,8 +175,8 @@ void setup() {
   
   digitalWrite(BUILTIN_LED1, HIGH); // Turn the LED off by making the voltage HIGH
   digitalWrite(BUILTIN_LED2, HIGH); // Turn the LED off by making the voltage HIGH
-  digitalWrite(STATUS_LED, LOW); // Turn the LED off by making the voltage HIGH
-  digitalWrite(RELAY_EN, LOW); // Turn the LED off by making the voltage HIGH
+  digitalWrite(STATUS_LED, LOW); // Turn the LED off by making the voltage LOW
+  digitalWrite(RELAY_EN, HIGH); // Turn the RELAY_EN on by making the voltage HIGH
 
   digitalWrite(BUILTIN_LED1, LOW); 
   delay(500);
@@ -184,6 +185,10 @@ void setup() {
   digitalWrite(BUILTIN_LED1, LOW); 
   delay(500);
   digitalWrite(BUILTIN_LED1, HIGH); 
+
+  // Set Device ID based on MAC address
+
+  NODE_ID_U = NODE_ID + WiFi.macAddress();
   
   
 
