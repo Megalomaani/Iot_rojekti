@@ -26,6 +26,9 @@ const short int BUILTIN_LED2 = 16;//GPIO16
 
 const String node_CMDs[] = {"ON", "OFF"};
 
+const int cmd_amnt = sizeof(node_CMDs) / sizeof(node_CMDs[0]);
+
+
 
 String data = "NULL";
 String cmd = "NULL";
@@ -145,7 +148,7 @@ void connectToServer(){
   }
 
   // SEND COMMAND LIST
-  for(int i = 0; i < 3;i++){
+  for(int i = 0; i < cmd_amnt; i++){
     Serial.println("sent cmd");
     client.print(node_CMDs[i]);
     delay(50); //TODO Test if neccesary
@@ -189,6 +192,8 @@ void setup() {
   // Set Device ID based on MAC address
 
   NODE_ID_U = NODE_ID + WiFi.macAddress();
+
+  Serial.begin(9600);
   
   
 
